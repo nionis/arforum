@@ -1,17 +1,21 @@
 import { types, flow } from "mobx-state-tree";
 import gql from "graphql-tag";
+import arweave, { graphql } from "src/arweave";
+import Primitive from "src/models/Primitive";
 import Post from "src/models/Post";
 import Transaction from "src/models/Transaction";
 import user from "src/stores/user";
-import arweave, { graphql } from "src/arweave";
-import { randomId, getNow } from "src/utils";
+import { randomId, getNow, addTags } from "src/utils";
 import { forumId } from "src/env";
 
 const Category = types
-  .model("Category", {
-    id: types.identifier,
-    posts: types.map(Post)
-  })
+  .compose(
+    "Category",
+    Primitive,
+    types.model({
+      posts: types.map(Post)
+    })
+  )
   .views(self => ({
     get name() {
       return self.id;
@@ -46,15 +50,23 @@ const Category = types
       );
 
       posts.forEach(post => {
-        if (self.posts.has(post.id)) {
-          const _post = self.posts.get(post.id);
-          if (_post.previousIds.length <= post.previousIds.length) return;
-        }
+        try {
+          if (self.posts.has(post.id)) {
+            const _post = self.posts.get(post.id);
 
-        self.posts.set(
-          post.id,
-          Post.create({ id: post.id, title: post.title, text: post.text })
-        );
+            if (_post.updatedAt > post.updateAt) return;
+          } else {
+            self.posts.set(
+              post.id,
+              Post.create({
+                ...post,
+                categoryId: self.id
+              })
+            );
+          }
+        } catch (err) {
+          console.error(err);
+        }
       });
     }),
 
@@ -66,29 +78,29 @@ const Category = types
       const id = randomId();
       const now = getNow();
 
-      const transaction: any = yield arweave.createTransaction(
-        {
-          data: JSON.stringify({
+      const transaction: any = yield arweave
+        .createTransaction(
+          {
+            data: JSON.stringify({
+              id,
+              title,
+              text,
+              previousIds: [],
+              updatedAt: now,
+              createdAt: now
+            })
+          },
+          user.jwk
+        )
+        .then(tx => {
+          return addTags(tx, {
+            type: "post",
+            category: self.id,
             id,
-            title,
-            text,
-            previousIds: [],
-            updatedAt: now,
-            createdAt: now
-          })
-        },
-        user.jwk
-      );
-
-      transaction.addTag("Content-Type", "application/json");
-      transaction.addTag("appId", forumId);
-      transaction.addTag("type", "post");
-      transaction.addTag("category", self.id);
-      transaction.addTag("id", id);
-      transaction.addTag("createdAt", now);
-      transaction.addTag("updatedAt", now);
-
-      console.log(transaction);
+            createdAt: now,
+            updatedAt: now
+          });
+        });
 
       return Transaction.create().run(transaction);
     })

@@ -1,7 +1,7 @@
 import { observer } from "mobx-react";
 import user from "src/stores/user";
 import forum from "src/stores/forum";
-import jwk from "../arweave-keyfile.json";
+import jwk from "../../arweave-keyfile.json";
 
 user.setJwk(jwk).then(() => {
   user.getUsername();
@@ -26,7 +26,7 @@ export default observer(() => {
       {user.loggedIn ? (
         <>
           <button onClick={forum.getCategories}>fetchCategories</button>
-          <button onClick={() => forum.createCategory("news")}>
+          <button onClick={() => forum.createCategory("fun")}>
             createCategories
           </button>
         </>
@@ -43,13 +43,14 @@ export default observer(() => {
             {Array.from(category.posts.values()).map(post => {
               return (
                 <>
-                  <button onClick={() => post.vote("UPVOTE")}>+</button>
-                  <button onClick={() => post.vote("DOWNVOTE")}>-</button>
+                  <button onClick={() => post.vote("upvote")}>+</button>
+                  <button onClick={() => post.vote("downvote")}>-</button>
                   <pre>
                     {JSON.stringify(
                       {
                         title: post.title,
                         text: post.text,
+                        previousIds: post.previousIds,
                         ...post.results
                       },
                       null,

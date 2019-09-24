@@ -1,31 +1,39 @@
 import { types, flow, Instance } from "mobx-state-tree";
 import gql from "graphql-tag";
+import arweave, { graphql } from "src/arweave";
+import Primitive from "src/models/Primitive";
 import Transaction from "src/models/Transaction";
 import user from "src/stores/user";
-import arweave, { graphql } from "src/arweave";
-import { randomId, getNow } from "src/utils";
+import { randomId, getNow, addTags } from "src/utils";
 import { forumId } from "src/env";
 
-const Vote = types.model("Vote", {
-  id: types.identifier,
-  type: types.enumeration(["UPVOTE", "DOWNVOTE"])
-});
+const Vote = types.compose(
+  "Vote",
+  Primitive,
+  types.model({
+    id: types.identifier,
+    type: types.enumeration(["upvote", "downvote"])
+  })
+);
 
 const Votes = types
-  .model("Votes", {
-    id: types.identifier,
-    votes: types.map(Vote)
-  })
+  .compose(
+    "Votes",
+    Primitive,
+    types.model("Votes", {
+      votes: types.map(Vote)
+    })
+  )
   .views(self => ({
     get results() {
       const votes = Array.from(self.votes.values());
 
       return votes.reduce(
         (results, vote) => {
-          if (vote.type === "UPVOTE") {
+          if (vote.type === "upvote") {
             results.upvotes++;
             results.voteScore++;
-          } else if (vote.type === "DOWNVOTE") {
+          } else if (vote.type === "downvote") {
             results.downvotes++;
             results.voteScore--;
           }
@@ -71,7 +79,11 @@ const Votes = types
       votes.forEach(vote => {
         if (self.votes.has(vote.id)) return;
 
-        self.votes.set(vote.id, Vote.create({ id: vote.id, type: vote.type }));
+        try {
+          self.votes.set(vote.id, Vote.create(vote));
+        } catch (err) {
+          console.error(err);
+        }
       });
     }),
 
@@ -83,28 +95,28 @@ const Votes = types
       const id = randomId();
       const now = getNow();
 
-      const transaction: any = yield arweave.createTransaction(
-        {
-          data: JSON.stringify({
-            id,
+      const transaction: any = yield arweave
+        .createTransaction(
+          {
+            data: JSON.stringify({
+              id,
+              post: self.id,
+              type,
+              updatedAt: now,
+              createdAt: now
+            })
+          },
+          user.jwk
+        )
+        .then(tx => {
+          return addTags(tx, {
+            type: "vote",
             post: self.id,
-            type,
-            updatedAt: now,
-            createdAt: now
-          })
-        },
-        user.jwk
-      );
-
-      transaction.addTag("Content-Type", "application/json");
-      transaction.addTag("appId", forumId);
-      transaction.addTag("type", "vote");
-      transaction.addTag("post", self.id);
-      transaction.addTag("id", id);
-      transaction.addTag("createdAt", now);
-      transaction.addTag("updatedAt", now);
-
-      console.log(transaction);
+            id,
+            createdAt: now,
+            updatedAt: now
+          });
+        });
 
       return Transaction.create().run(transaction);
     })

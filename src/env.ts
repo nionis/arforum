@@ -1,1 +1,1 @@
-export const forumId = "arforum-original";
+export const forumId = "arforum-dev-1";

@@ -63,7 +63,6 @@ const User = types
       );
 
       const item = maxBy(items, o => Number(o.createdAt));
-      console.log(items);
 
       if (item) {
         self.username = item.name;
