@@ -1,0 +1,7 @@
+node_modules/
+.next/
+out/
+out-arweave/
+out-final/
+arweave-keyfile.json
+notes.txt
