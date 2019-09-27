@@ -16,12 +16,17 @@ interface IOpsPost extends IOpsConstant {
   category: string;
 }
 
+interface IOpsComment extends IOpsConstant {
+  type: "comment";
+  post: string;
+}
+
 interface IOpsVote extends IOpsConstant {
   type: "vote";
   post: string;
 }
 
-type IOps = IOpsCategory | IOpsPost | IOpsVote;
+type IOps = IOpsCategory | IOpsPost | IOpsComment | IOpsVote;
 
 const addTags = (tx: Transaction, ops: IOps) => {
   tx.addTag("Content-Type", "application/json");
@@ -33,7 +38,7 @@ const addTags = (tx: Transaction, ops: IOps) => {
   tx.addTag("type", ops.type);
   if (ops.type === "post") {
     tx.addTag("category", ops.category);
-  } else if (ops.type === "vote") {
+  } else if (ops.type === "comment" || ops.type === "vote") {
     tx.addTag("post", ops.post);
   }
 

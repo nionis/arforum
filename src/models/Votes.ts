@@ -4,7 +4,7 @@ import arweave, { graphql } from "src/arweave";
 import Primitive from "src/models/Primitive";
 import Transaction from "src/models/Transaction";
 import user from "src/stores/user";
-import { randomId, getNow, addTags } from "src/utils";
+import { randomId, getNow, addTags, pickLatest } from "src/utils";
 import { forumId } from "src/env";
 
 const Vote = types.compose(
@@ -46,6 +46,16 @@ const Votes = types
           downvotes: 0
         }
       );
+    },
+
+    get usersVote(): Instance<typeof Vote> | undefined {
+      const votes = Array.from(self.votes.values()).filter(vote => {
+        return vote.from === user.address;
+      });
+
+      if (!votes.length) return undefined;
+
+      return pickLatest(votes)[0];
     }
   }))
   .actions(self => ({
@@ -70,8 +80,18 @@ const Votes = types
 
       const votes: any[] = yield Promise.all(
         ids.map(id => {
-          return arweave.transactions.get(id).then(tx => {
-            return JSON.parse(tx.get("data", { decode: true, string: true }));
+          return arweave.transactions.get(id).then(async tx => {
+            const owner = tx.get("owner");
+            const from = await arweave.wallets.ownerToAddress(owner);
+
+            const data = JSON.parse(
+              tx.get("data", { decode: true, string: true })
+            );
+
+            return {
+              ...data,
+              from
+            };
           });
         })
       );

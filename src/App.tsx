@@ -1,7 +1,7 @@
 import { observer } from "mobx-react";
 import Head from "next/head";
 import Header from "src/components/Header";
-import Home from "src/components/Home";
+import Home from "src/Home";
 import appStore from "src/stores/app";
 
 const View = observer(() => {
@@ -33,6 +33,10 @@ const App = observer(() => {
           padding: 0;
           font-family: "Roboto", sans-serif;
           background-color: ${appStore.colors.pageBackground};
+        }
+
+        * {
+          box-sizing: border-box;
         }
       `}</style>
     </>

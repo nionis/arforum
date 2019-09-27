@@ -43,8 +43,18 @@ const Category = types
 
       const posts: any[] = yield Promise.all(
         ids.map(id => {
-          return arweave.transactions.get(id).then(tx => {
-            return JSON.parse(tx.get("data", { decode: true, string: true }));
+          return arweave.transactions.get(id).then(async tx => {
+            const owner = tx.get("owner");
+            const from = await arweave.wallets.ownerToAddress(owner);
+
+            const data = JSON.parse(
+              tx.get("data", { decode: true, string: true })
+            );
+
+            return {
+              ...data,
+              from
+            };
           });
         })
       );
