@@ -1,15 +1,14 @@
-import { CSSProperties } from "react";
 import { observer } from "mobx-react";
 import Border from "src/components/Border";
 
 interface ITabs {
   children?: any[];
-  color?: string;
-  style?: CSSProperties;
+  direction?: "row" | "column";
 }
 
-const Tabs = observer((props: ITabs) => {
-  const { children } = props;
+const Tabs = observer(({ children, direction = "row" }: ITabs) => {
+  const isRight = direction === "row";
+  const isBottom = direction === "column";
 
   return (
     <>
@@ -22,7 +21,11 @@ const Tabs = observer((props: ITabs) => {
           return (
             <>
               {child}
-              <Border right style={{ height: "100%" }} />
+              <Border
+                right={isRight}
+                bottom={isBottom}
+                style={{ height: "100%" }}
+              />
             </>
           );
         }

@@ -1,5 +1,6 @@
 import { observer } from "mobx-react";
 import Item from "src/components/Item";
+import Tabs from "src/components/Tabs";
 import app from "src/stores/app";
 import forum from "src/stores/forum";
 
@@ -10,20 +11,19 @@ const Categories = observer(() => {
   return (
     <>
       <div className="container">
-        <div
-          className="item"
-          style={{ borderBottom: `1px solid ${colors.border}` }}
-        >
-          <Item textColor={colors.mutedText}>Categories</Item>
-        </div>
+        <Tabs direction="column">
+          <div className="item">
+            <Item textColor={colors.mutedText}>Categories</Item>
+          </div>
 
-        {categories.map(category => {
-          return (
-            <div className="item">
-              <Item>{category.name}</Item>
-            </div>
-          );
-        })}
+          {categories.map(category => {
+            return (
+              <div className="item">
+                <Item>{category.name}</Item>
+              </div>
+            );
+          })}
+        </Tabs>
       </div>
 
       <style jsx>{`

@@ -13,6 +13,12 @@ interface IPost {
 const Post = observer(({ store }: IPost) => {
   const { colors } = app;
   const description = store.text.substring(0, 10);
+  const commentsSize = `${store.comments.size} ${
+    store.comments.size === 1 ? "comment" : "comments"
+  }`;
+  const category =
+    "/a/categorycategoryweeeeeeeeeeeeeeeeeeecategorycategorycategorycategorycategorycategorycategorycategorycategorycategorycategorycategory";
+  const user = "by Beeezle3M ago";
 
   return (
     <>
@@ -27,27 +33,9 @@ const Post = observer(({ store }: IPost) => {
           <Item textColor={colors.mutedText}>
             <span>{description}</span>
           </Item>
-          <div className="comments">
-            <Item textColor={colors.mutedText}>
-              <span>
-                {store.comments.size}{" "}
-                {store.comments.size === 1 ? "comment" : "comments"}
-              </span>
-            </Item>
-            {app.size === "large" ? (
-              <>
-                {" "}
-                <Item textColor={colors.mutedText}>
-                  <span>
-                    /a/categorycategoryweeeeeeeeeeeeeeeeeeecategorycategorycategorycategorycategorycategorycategorycategorycategorycategorycategorycategory
-                  </span>
-                </Item>{" "}
-                <Item textColor={colors.mutedText}>
-                  <span>by Beeezle3M ago</span>
-                </Item>
-              </>
-            ) : null}
-          </div>
+          <Item textColor={colors.mutedText}>
+            <span>{`${commentsSize} ${category} ${user}`}</span>
+          </Item>
         </div>
       </div>
 
@@ -59,9 +47,6 @@ const Post = observer(({ store }: IPost) => {
           flex-direction: row;
           width: 100%;
           min-height: 10vh;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          overflow: hidden;
           background-color: ${colors.foreground};
           border: 1px solid ${colors.border};
         }
@@ -72,12 +57,7 @@ const Post = observer(({ store }: IPost) => {
           text-align: left;
           flex-direction: column;
           padding-left: 10px;
-        }
-
-        .comments {
-          display: flex;
-          justify-content: space-evenly;
-          text-align: center;
+          overflow: hidden;
         }
       `}</style>
     </>

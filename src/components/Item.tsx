@@ -26,6 +26,9 @@ const Item = observer(
 
         <style jsx>{`
           div {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
             color: ${textColor};
             cursor: default;
           }
