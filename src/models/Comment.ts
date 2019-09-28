@@ -4,7 +4,7 @@ import Primitive from "src/models/Primitive";
 import Votes from "src/models/Votes";
 import History from "src/models/History";
 import Transaction from "src/models/Transaction";
-import user from "src/stores/user";
+import account from "src/stores/account";
 import { getNow, addTags } from "src/utils";
 
 const Comment = types
@@ -15,13 +15,13 @@ const Comment = types
     History,
     types.model({
       postId: types.maybe(types.string),
-      text: types.maybe(types.string),
-      replies: types.array(types.reference(types.late(() => Comment)))
+      text: types.maybe(types.string)
+      // replies: types.array(types.reference(types.late(() => Comment)))
     })
   )
   .actions(self => ({
     updateText: flow(function* updateText(text: string) {
-      if (!user.loggedIn) {
+      if (!account.loggedIn) {
         throw Error("user is not logged in");
       }
 
@@ -39,7 +39,7 @@ const Comment = types
               createdAt: self.createdAt
             })
           },
-          user.jwk
+          account.jwk
         )
         .then(tx => {
           return addTags(tx, {

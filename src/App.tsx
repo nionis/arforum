@@ -2,10 +2,15 @@ import { observer } from "mobx-react";
 import Head from "next/head";
 import Header from "src/components/Header";
 import Home from "src/Home";
+import Post from "src/Post";
 import app from "src/stores/app";
 
 const View = observer(() => {
-  if (app.pathData.page === "Home") {
+  const { page, postId } = app.pathData;
+
+  if (postId) {
+    return <Post />;
+  } else if (page === "Home") {
     return <Home />;
   }
 

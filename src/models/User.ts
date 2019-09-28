@@ -1,3 +1,4 @@
+import { when } from "mobx";
 import { types, flow } from "mobx-state-tree";
 import { maxBy } from "lodash";
 import arweave from "src/arweave";
@@ -7,12 +8,16 @@ const User = types
     address: types.maybe(types.string),
     username: types.maybe(types.string)
   })
-  .volatile(self => ({
-    jwk: undefined
+  .views(self => ({
+    get tinyAddress() {
+      if (!self.address) return "";
+
+      return `${self.address.substring(0, 4)}..`;
+    }
   }))
   .views(self => ({
-    get loggedIn() {
-      return !!self.address;
+    get displayName() {
+      return self.username || self.tinyAddress || "not found";
     }
   }))
   .actions(self => ({
@@ -67,12 +72,12 @@ const User = types
       if (item) {
         self.username = item.name;
       }
-    }),
-
-    setJwk: flow(function* setJwk(jwk: typeof self["jwk"]) {
-      self.jwk = jwk;
-      self.address = yield arweave.wallets.jwkToAddress(jwk);
     })
+  }))
+  .actions(self => ({
+    afterCreate() {
+      when(() => !!self.address, self.getUsername);
+    }
   }));
 
 export default User;

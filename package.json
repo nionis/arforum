@@ -23,7 +23,10 @@
     "next": "^9.0.6",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
+    "react-dropzone": "^10.1.9",
+    "react-markdown": "^4.2.2",
     "styled-jsx": "^3.2.2",
+    "timeago.js": "^4.0.0-beta.2",
     "uuid": "^3.3.3"
   },
   "devDependencies": {

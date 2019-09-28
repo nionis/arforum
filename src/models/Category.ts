@@ -4,7 +4,7 @@ import arweave, { graphql } from "src/arweave";
 import Primitive from "src/models/Primitive";
 import Post from "src/models/Post";
 import Transaction from "src/models/Transaction";
-import user from "src/stores/user";
+import account from "src/stores/account";
 import { randomId, getNow, addTags } from "src/utils";
 import { forumId } from "src/env";
 
@@ -70,6 +70,7 @@ const Category = types
               post.id,
               Post.create({
                 ...post,
+                from: { address: post.from },
                 categoryId: self.id
               })
             );
@@ -81,7 +82,7 @@ const Category = types
     }),
 
     createPost: flow(function* createPost(title: string, text: string) {
-      if (!user.loggedIn) {
+      if (!account.loggedIn) {
         throw Error("user is not logged in");
       }
 
@@ -100,7 +101,7 @@ const Category = types
               createdAt: now
             })
           },
-          user.jwk
+          account.jwk
         )
         .then(tx => {
           return addTags(tx, {

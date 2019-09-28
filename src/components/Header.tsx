@@ -1,17 +1,48 @@
-import Router from "next/router";
 import { observer } from "mobx-react";
+import { types } from "mobx-state-tree";
+import Modal from "@material-ui/core/Modal";
 import { WbSunny } from "@material-ui/icons";
+import Login from "src/components/Login";
 import Tabs from "src/components/Tabs";
 import Item from "src/components/Item";
-import app from "src/stores/app";
-import user from "src/stores/user";
+import app, { goto } from "src/stores/app";
+import account from "src/stores/account";
+
+const store = types
+  .model("Header", {
+    opened: false
+  })
+  .actions(self => ({
+    open() {
+      self.opened = true;
+    },
+
+    close() {
+      console.log("here");
+      self.opened = false;
+    }
+  }))
+  .create();
 
 const DisplayName = observer(() => {
-  if (!user.loggedIn) return <span>login</span>;
-  if (user.loggedIn && user.username) return <span>{user.username}</span>;
+  const { colors } = app;
 
-  const address = user.address.substring(0, 4);
-  return <span>{address}..</span>;
+  if (!account.loggedIn) {
+    return (
+      <Item onClick={store.open} textColor={colors.mutedText}>
+        login
+      </Item>
+    );
+  }
+
+  return (
+    <Item
+      onClick={() => goto.user(account.address)}
+      textColor={colors.mutedText}
+    >
+      {account.displayName}
+    </Item>
+  );
 });
 
 const Header = observer(() => {
@@ -19,9 +50,20 @@ const Header = observer(() => {
 
   return (
     <>
+      <Modal
+        open={store.opened}
+        onClose={store.close}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        <Login onClose={store.close} />
+      </Modal>
       <div className="container">
         <div className="innerBox">
-          <Item onClick={() => Router.push("/")} style={{ fontWeight: "bold" }}>
+          <Item onClick={() => goto.home()} style={{ fontWeight: "bold" }}>
             <span>ARforum</span>
           </Item>
           <div className="rightBox">

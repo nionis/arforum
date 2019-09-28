@@ -4,7 +4,7 @@ import arweave, { graphql } from "src/arweave";
 import Primitive from "src/models/Primitive";
 import Category from "src/models/Category";
 import Transaction from "src/models/Transaction";
-import user from "src/stores/user";
+import account from "src/stores/account";
 import { getNow, addTags } from "src/utils";
 import { forumId } from "src/env";
 
@@ -57,7 +57,13 @@ const Forum = types
         if (self.categories.has(cat.id)) return;
 
         try {
-          self.categories.set(cat.id, Category.create(cat));
+          self.categories.set(
+            cat.id,
+            Category.create({
+              ...cat,
+              from: { address: cat.from }
+            })
+          );
         } catch (err) {
           console.error(err);
         }
@@ -65,7 +71,7 @@ const Forum = types
     }),
 
     createCategory: flow(function* createCategory(name: string) {
-      if (!user.loggedIn) {
+      if (!account.loggedIn) {
         throw Error("user is not logged in");
       }
 
@@ -81,7 +87,7 @@ const Forum = types
               createdAt: now
             })
           },
-          user.jwk
+          account.jwk
         )
         .then(tx => {
           return addTags(tx, {

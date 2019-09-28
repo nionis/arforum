@@ -5,4 +5,6 @@ const forum = Forum.create({
   id: forumId
 });
 
+forum.getCategories();
+
 export default forum;

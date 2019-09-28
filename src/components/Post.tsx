@@ -1,10 +1,11 @@
 import { observer } from "mobx-react";
 import { Instance } from "mobx-state-tree";
+import { format } from "timeago.js";
 import Item from "src/components/Item";
 import Votes from "src/components/Votes";
-import Box from "src/components/Border";
+import Border from "src/components/Border";
 import PostModel from "src/models/Post";
-import app from "src/stores/app";
+import app, { goto } from "src/stores/app";
 
 interface IPost {
   store: Instance<typeof PostModel>;
@@ -16,26 +17,38 @@ const Post = observer(({ store }: IPost) => {
   const commentsSize = `${store.comments.size} ${
     store.comments.size === 1 ? "comment" : "comments"
   }`;
-  const category =
-    "/a/categorycategoryweeeeeeeeeeeeeeeeeeecategorycategorycategorycategorycategorycategorycategorycategorycategorycategorycategorycategory";
-  const user = "by Beeezle3M ago";
+  const category = `/c/${store.categoryId}`;
+  const displayName = store.from.displayName;
+  const ago = format(store.createdAt);
 
   return (
     <>
-      <div className="container box">
-        <Box right>
+      <div className="container">
+        <Border right>
           <Votes store={store} />
-        </Box>
+        </Border>
         <div className="content">
-          <Item>
+          <Item onClick={() => goto.post(store.categoryId, store.id)}>
             <span>{store.title}</span>
           </Item>
-          <Item textColor={colors.mutedText}>
+          <Item>
             <span>{description}</span>
           </Item>
-          <Item textColor={colors.mutedText}>
-            <span>{`${commentsSize} ${category} ${user}`}</span>
-          </Item>
+          <span className="comment">
+            <Item onClick={() => goto.post(store.categoryId, store.id)}>
+              {commentsSize}&nbsp;
+            </Item>
+            <Item onClick={() => goto.category(store.categoryId)}>
+              {category}&nbsp;
+            </Item>
+            {app.size === "large" ? (
+              <>
+                <Item textColor={colors.mutedText}>by&nbsp;</Item>
+                <Item>{displayName}&nbsp;</Item>
+                <Item textColor={colors.mutedText}>{ago}</Item>
+              </>
+            ) : null}
+          </span>
         </div>
       </div>
 
@@ -57,6 +70,13 @@ const Post = observer(({ store }: IPost) => {
           text-align: left;
           flex-direction: column;
           padding-left: 10px;
+          overflow: hidden;
+        }
+
+        .comment {
+          display: flex;
+          text-overflow: ellipsis;
+          white-space: nowrap;
           overflow: hidden;
         }
       `}</style>

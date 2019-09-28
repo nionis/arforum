@@ -6,7 +6,7 @@ import Votes from "src/models/Votes";
 import History from "src/models/History";
 import Comment from "src/models/Comment";
 import Transaction from "src/models/Transaction";
-import user from "src/stores/user";
+import account from "src/stores/account";
 import { randomId, getNow, addTags } from "src/utils";
 import { forumId } from "src/env";
 
@@ -25,7 +25,7 @@ const Post = types
   )
   .actions(self => ({
     updateText: flow(function* updateText(text: string) {
-      if (!user.loggedIn) {
+      if (!account.loggedIn) {
         throw Error("user is not logged in");
       }
 
@@ -44,7 +44,7 @@ const Post = types
               createdAt: self.createdAt
             })
           },
-          user.jwk
+          account.jwk
         )
         .then(tx => {
           return addTags(tx, {
@@ -107,6 +107,7 @@ const Post = types
               comment.id,
               Comment.create({
                 ...comment,
+                from: { address: comment.from },
                 post: self.id
               })
             );
@@ -118,7 +119,7 @@ const Post = types
     }),
 
     createComment: flow(function* createComment(text: string) {
-      if (!user.loggedIn) {
+      if (!account.loggedIn) {
         throw Error("user is not logged in");
       }
 
@@ -136,7 +137,7 @@ const Post = types
               createdAt: now
             })
           },
-          user.jwk
+          account.jwk
         )
         .then(tx => {
           return addTags(tx, {

@@ -3,7 +3,7 @@ import gql from "graphql-tag";
 import arweave, { graphql } from "src/arweave";
 import Primitive from "src/models/Primitive";
 import Transaction from "src/models/Transaction";
-import user from "src/stores/user";
+import account from "src/stores/account";
 import { randomId, getNow, addTags, pickLatest } from "src/utils";
 import { forumId } from "src/env";
 
@@ -50,7 +50,7 @@ const Votes = types
 
     get usersVote(): Instance<typeof Vote> | undefined {
       const votes = Array.from(self.votes.values()).filter(vote => {
-        return vote.from === user.address;
+        return vote.from.address === account.address;
       });
 
       if (!votes.length) return undefined;
@@ -68,7 +68,7 @@ const Votes = types
                 tags: [
                   { name: "appId", value: "${forumId}" }
                   { name: "type", value: "vote" }
-                  { name: "post", value: "${self.id}" }
+                  { name: "item", value: "${self.id}" }
                 ]
               ) {
                 id
@@ -100,7 +100,13 @@ const Votes = types
         if (self.votes.has(vote.id)) return;
 
         try {
-          self.votes.set(vote.id, Vote.create(vote));
+          self.votes.set(
+            vote.id,
+            Vote.create({
+              ...vote,
+              from: { address: vote.from }
+            })
+          );
         } catch (err) {
           console.error(err);
         }
@@ -108,7 +114,7 @@ const Votes = types
     }),
 
     vote: flow(function* vote(type: Instance<typeof Vote>["type"]) {
-      if (!user.loggedIn) {
+      if (!account.loggedIn) {
         throw Error("user is not logged in");
       }
 
@@ -120,18 +126,18 @@ const Votes = types
           {
             data: JSON.stringify({
               id,
-              post: self.id,
+              item: self.id,
               type,
               updatedAt: now,
               createdAt: now
             })
           },
-          user.jwk
+          account.jwk
         )
         .then(tx => {
           return addTags(tx, {
             type: "vote",
-            post: self.id,
+            item: self.id,
             id,
             createdAt: now,
             updatedAt: now

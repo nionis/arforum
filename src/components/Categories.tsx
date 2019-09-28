@@ -1,8 +1,8 @@
-import Router from "next/router";
 import { observer } from "mobx-react";
+import Border from "src/components/Border";
 import Item from "src/components/Item";
 import Tabs from "src/components/Tabs";
-import app from "src/stores/app";
+import app, { goto } from "src/stores/app";
 import forum from "src/stores/forum";
 
 const Categories = observer(() => {
@@ -18,14 +18,20 @@ const Categories = observer(() => {
           </div>
 
           {categories.map(category => {
-            const isActive = app.pathData.id === category.id;
+            const isActive: boolean = app.pathData.categoryId === category.id;
 
             return (
-              <div className={`item ${isActive ? "active" : ""}`}>
-                <Item onClick={() => Router.push(`/#/c/${category.id}`)}>
+              <Border
+                left={isActive}
+                disabled={!isActive}
+                color={colors.accent}
+                width="2px"
+                style={{ padding: "10px" }}
+              >
+                <Item onClick={() => goto.category(category.id)}>
                   {category.name}
                 </Item>
-              </div>
+              </Border>
             );
           })}
         </Tabs>

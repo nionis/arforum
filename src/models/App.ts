@@ -16,21 +16,22 @@ const App = types
 
     get pathData(): {
       page?: "Home";
-      id?: string;
+      categoryId?: string;
+      postId?: string;
     } {
       if (self.path === "/") {
         return {
-          page: "Home",
-          id: undefined
+          page: "Home"
         };
       }
 
-      const [, , type, id] = self.path.split("/");
+      const [, , type, primaryId, secondaryId] = self.path.split("/");
 
       if (type === "c") {
         return {
           page: "Home",
-          id
+          categoryId: primaryId,
+          postId: secondaryId
         };
       }
 

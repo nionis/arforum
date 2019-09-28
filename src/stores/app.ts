@@ -7,4 +7,19 @@ const app = App.create({
   ...getClientSize()
 });
 
+export const goto = {
+  home: () => {
+    Router.push("/");
+  },
+  category: (id: string) => {
+    Router.push(`/#/c/${id}`);
+  },
+  post: (catId: string, postId: string) => {
+    Router.push(`/#/c/${catId}/${postId}`);
+  },
+  user: (userId: string) => {
+    Router.push(`/#/u/${userId}`);
+  }
+};
+
 export default app;

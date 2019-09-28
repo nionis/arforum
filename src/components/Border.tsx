@@ -8,21 +8,38 @@ interface IBorder {
   right?: boolean;
   bottom?: boolean;
   left?: boolean;
+  disabled?: boolean;
+  color?: string;
+  width?: string;
   style?: CSSProperties;
 }
 
-const getBorderStyle = (useBorder: boolean) => {
-  const { colors } = app;
-
-  if (useBorder) return `1px solid ${colors.border}`;
-  return "none";
-};
-
 const Border = observer(
-  ({ children, top, right, bottom, left, style }: IBorder) => {
+  ({
+    children,
+    top,
+    right,
+    bottom,
+    left,
+    disabled,
+    color,
+    width,
+    style
+  }: IBorder) => {
+    const { colors } = app;
+    color = color || colors.border;
+    width = width || "1px";
+
     const all = [top, right, bottom, left].every(v => {
-      return !!v;
+      return !v;
     });
+
+    const getBorderStyle = (useBorder: boolean) => {
+      if (disabled) return "none";
+
+      if (useBorder) return `${width} solid ${color}`;
+      return "none";
+    };
 
     return (
       <>

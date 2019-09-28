@@ -1,26 +1,19 @@
 import { observer } from "mobx-react";
 import { flatMap } from "lodash";
 import app from "src/stores/app";
-import user from "src/stores/user";
 import forum from "src/stores/forum";
-import jwk from "../arweave-keyfile.json";
 import Post from "src/components/Post";
 import Categories from "src/components/Categories";
 
-user.setJwk(jwk).then(() => {
-  user.getUsername();
-  forum.getCategories();
-});
-
 export default observer(() => {
-  const { id } = app.pathData;
+  const { categoryId } = app.pathData;
   const categories = Array.from(forum.categories.values());
   const posts = flatMap(categories, category =>
     Array.from(category.posts.values())
   ).filter(post => {
-    if (!id) return true;
+    if (!categoryId) return true;
 
-    return post.categoryId === id;
+    return post.categoryId === categoryId;
   });
 
   return (

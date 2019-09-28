@@ -1,5 +1,5 @@
 import { types, flow } from "mobx-state-tree";
-import user from "src/stores/user";
+import account from "src/stores/account";
 import arweave from "src/arweave";
 
 const TransactionModel = types
@@ -32,11 +32,11 @@ const TransactionModel = types
       let response;
 
       try {
-        if (!user.loggedIn) {
+        if (!account.loggedIn) {
           throw Error("user is not logged in");
         }
 
-        yield arweave.transactions.sign(transaction, user.jwk);
+        yield arweave.transactions.sign(transaction, account.jwk);
 
         self.update({
           status: "PENDING",
