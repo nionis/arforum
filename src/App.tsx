@@ -2,10 +2,10 @@ import { observer } from "mobx-react";
 import Head from "next/head";
 import Header from "src/components/Header";
 import Home from "src/Home";
-import appStore from "src/stores/app";
+import app from "src/stores/app";
 
 const View = observer(() => {
-  if (appStore.page === "Home") {
+  if (app.page === "Home") {
     return <Home />;
   }
 
@@ -13,6 +13,8 @@ const View = observer(() => {
 });
 
 const App = observer(() => {
+  const { colors } = app;
+
   return (
     <>
       <Head>
@@ -32,7 +34,7 @@ const App = observer(() => {
           margin: 0;
           padding: 0;
           font-family: "Roboto", sans-serif;
-          background-color: ${appStore.colors.pageBackground};
+          background-color: ${colors.pageBackground};
         }
 
         * {

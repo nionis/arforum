@@ -16,3 +16,4 @@ export const getClientSize = () => {
 
 export * from "./addTags";
 export * from "./pickLatest";
+export * from "./colors";

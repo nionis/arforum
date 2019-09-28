@@ -22,7 +22,7 @@ const Post = observer(({ store }: IPost) => {
 
   return (
     <>
-      <div className="container">
+      <div className="container box">
         <Box right>
           <Votes store={store} />
         </Box>

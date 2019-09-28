@@ -1,6 +1,5 @@
 import { types } from "mobx-state-tree";
-import getColors from "src/getColors";
-import { getClientSize } from "src/utils";
+import { getClientSize, getColors } from "src/utils";
 
 const App = types
   .model("App", {

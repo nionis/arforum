@@ -21,7 +21,7 @@ const constants = {
   downvote: "#2e70ff"
 };
 
-const light: IColors = {
+export const light: IColors = {
   ...constants,
   normalText: "#454f5b",
   mutedText: "#818e99",
@@ -34,7 +34,7 @@ const light: IColors = {
   shadow: "rgba(0, 0, 0, 0.05)"
 };
 
-const dark: IColors = {
+export const dark: IColors = {
   ...constants,
   normalText: "#ffffff",
   mutedText: "#b0b8bf",
@@ -46,7 +46,3 @@ const dark: IColors = {
   inputBackground: "#212121",
   shadow: "rgba(0, 0, 0, 0.4)"
 };
-
-const getColors = (isDark: boolean) => (isDark ? dark : light);
-
-export default getColors;
