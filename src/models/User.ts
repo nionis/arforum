@@ -76,7 +76,17 @@ const User = types
   }))
   .actions(self => ({
     afterCreate() {
-      when(() => !!self.address, self.getUsername);
+      console.log(self.address);
+      if (self.address) {
+        self.getUsername();
+      } else {
+        const dispatch = when(
+          () => !!self.address,
+          () => {
+            self.getUsername().then(() => dispatch());
+          }
+        );
+      }
     }
   }));
 

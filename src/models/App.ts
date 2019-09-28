@@ -15,9 +15,10 @@ const App = types
     },
 
     get pathData(): {
-      page?: "Home";
+      page?: "Home" | "User";
       categoryId?: string;
       postId?: string;
+      userId?: string;
     } {
       if (self.path === "/") {
         return {
@@ -25,13 +26,18 @@ const App = types
         };
       }
 
-      const [, , type, primaryId, secondaryId] = self.path.split("/");
+      const [, , type, id1, id2] = self.path.split("/");
 
       if (type === "c") {
         return {
           page: "Home",
-          categoryId: primaryId,
-          postId: secondaryId
+          categoryId: id1,
+          postId: id2
+        };
+      } else if (type === "u") {
+        return {
+          page: "User",
+          userId: id1
         };
       }
 

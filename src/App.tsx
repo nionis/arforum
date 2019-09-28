@@ -3,6 +3,7 @@ import Head from "next/head";
 import Header from "src/components/Header";
 import Home from "src/Home";
 import Post from "src/Post";
+import User from "src/User";
 import app from "src/stores/app";
 
 const View = observer(() => {
@@ -12,6 +13,8 @@ const View = observer(() => {
     return <Post />;
   } else if (page === "Home") {
     return <Home />;
+  } else if (page === "User") {
+    return <User />;
   }
 
   return <span>not found</span>;
