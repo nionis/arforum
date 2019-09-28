@@ -44,7 +44,9 @@ const Post = observer(({ store }: IPost) => {
             {app.size === "large" ? (
               <>
                 <Item textColor={colors.mutedText}>by&nbsp;</Item>
-                <Item>{displayName}&nbsp;</Item>
+                <Item onClick={() => goto.user(store.from.address)}>
+                  {displayName}&nbsp;
+                </Item>
                 <Item textColor={colors.mutedText}>{ago}</Item>
               </>
             ) : null}
