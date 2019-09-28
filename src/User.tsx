@@ -40,6 +40,8 @@ const User = observer(() => {
           justify-content: space-around;
           width: 100vw;
           margin-top: ${app.size === "large" ? "5vh" : "2vh"};
+          background-color: ${colors.foreground};
+          border: 1px solid ${colors.border};
         }
 
         .padder {
@@ -48,6 +50,7 @@ const User = observer(() => {
           flex-direction: column;
           width: ${app.size === "large" ? "90%" : "100%"};
           height: 100%;
+          padding: 10px;
         }
 
         .setupUsername {
