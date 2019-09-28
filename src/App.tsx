@@ -5,7 +5,7 @@ import Home from "src/Home";
 import app from "src/stores/app";
 
 const View = observer(() => {
-  if (app.page === "Home") {
+  if (app.pathData.page === "Home") {
     return <Home />;
   }
 

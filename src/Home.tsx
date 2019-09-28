@@ -13,10 +13,15 @@ user.setJwk(jwk).then(() => {
 });
 
 export default observer(() => {
+  const { id } = app.pathData;
   const categories = Array.from(forum.categories.values());
   const posts = flatMap(categories, category =>
     Array.from(category.posts.values())
-  );
+  ).filter(post => {
+    if (!id) return true;
+
+    return post.categoryId === id;
+  });
 
   return (
     <>

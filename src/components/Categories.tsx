@@ -1,3 +1,4 @@
+import Router from "next/router";
 import { observer } from "mobx-react";
 import Item from "src/components/Item";
 import Tabs from "src/components/Tabs";
@@ -17,9 +18,13 @@ const Categories = observer(() => {
           </div>
 
           {categories.map(category => {
+            const isActive = app.pathData.id === category.id;
+
             return (
-              <div className="item">
-                <Item>{category.name}</Item>
+              <div className={`item ${isActive ? "active" : ""}`}>
+                <Item onClick={() => Router.push(`/#/c/${category.id}`)}>
+                  {category.name}
+                </Item>
               </div>
             );
           })}
@@ -37,6 +42,10 @@ const Categories = observer(() => {
 
         .item {
           padding: 10px;
+        }
+
+        .active {
+          background-color: red;
         }
       `}</style>
     </>

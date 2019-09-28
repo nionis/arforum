@@ -1,16 +1,40 @@
+import Router from "next/router";
 import { types } from "mobx-state-tree";
 import { getClientSize, getColors } from "src/utils";
 
 const App = types
   .model("App", {
     theme: types.optional(types.enumeration(["light", "dark"]), "light"),
-    page: types.optional(types.enumeration(["Home"]), "Home"),
+    path: types.string,
     width: types.number,
     height: types.number
   })
   .views(self => ({
     get colors() {
       return getColors(self.theme === "dark");
+    },
+
+    get pathData(): {
+      page?: "Home";
+      id?: string;
+    } {
+      if (self.path === "/") {
+        return {
+          page: "Home",
+          id: undefined
+        };
+      }
+
+      const [, , type, id] = self.path.split("/");
+
+      if (type === "c") {
+        return {
+          page: "Home",
+          id
+        };
+      }
+
+      return {};
     },
 
     get size(): "large" | "small" {
@@ -28,8 +52,8 @@ const App = types
       }
     },
 
-    changePage(page: typeof self["page"]) {
-      self.page = page;
+    updatePath(path: typeof self["path"]) {
+      self.path = path;
     },
 
     updateSizes(width: typeof self["width"], height: typeof self["height"]) {
@@ -39,6 +63,10 @@ const App = types
   }))
   .actions(self => ({
     afterCreate() {
+      // listen to path change
+      Router.events.on("hashChangeStart", self.updatePath);
+
+      // listen to screen resize
       window.addEventListener("resize", () => {
         const { width, height } = getClientSize();
         self.updateSizes(width, height);

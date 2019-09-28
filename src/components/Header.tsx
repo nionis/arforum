@@ -1,3 +1,4 @@
+import Router from "next/router";
 import { observer } from "mobx-react";
 import { WbSunny } from "@material-ui/icons";
 import Tabs from "src/components/Tabs";
@@ -20,8 +21,8 @@ const Header = observer(() => {
     <>
       <div className="container">
         <div className="innerBox">
-          <Item>
-            <span>arforum</span>
+          <Item onClick={() => Router.push("/")} style={{ fontWeight: "bold" }}>
+            <span>ARforum</span>
           </Item>
           <div className="rightBox">
             <Tabs>
