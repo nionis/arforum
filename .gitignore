@@ -5,3 +5,4 @@ out-arweave/
 out-final/
 arweave-keyfile.json
 notes.txt
+.env

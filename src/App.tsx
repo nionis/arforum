@@ -1,11 +1,12 @@
 import { observer } from "mobx-react";
 import Head from "next/head";
 import Header from "src/components/Header";
-import Home from "src/Home";
-import Post from "src/Post";
-import User from "src/User";
+import Home from "src/pages/Home";
+import Post from "src/pages/Post";
+import User from "src/pages/User";
 import app from "src/stores/app";
 
+// observer app store and swap pages
 const View = observer(() => {
   const { page, postId } = app.pathData;
 

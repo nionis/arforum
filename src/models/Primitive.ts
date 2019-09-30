@@ -1,11 +1,10 @@
 import { types } from "mobx-state-tree";
-import User from "src/models/User";
+import { id } from "src/utils";
 
 const Primitive = types.model("Primitive", {
-  id: types.identifier,
-  from: types.maybe(User),
-  createdAt: types.maybe(types.number),
-  updatedAt: types.maybe(types.number)
+  id,
+  createdAt: types.number,
+  updatedAt: types.number
 });
 
 export default Primitive;

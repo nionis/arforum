@@ -6,20 +6,30 @@ const Account = types
   .compose(
     "Account",
     User,
-    types.model({})
+    types.model({
+      id: types.maybe(types.string),
+      balance: "0"
+    })
   )
-  .volatile(self => ({
+  .volatile(() => ({
     jwk: undefined
   }))
   .views(self => ({
     get loggedIn() {
       return !!self.address;
+    },
+
+    get balancePretty() {
+      return arweave.ar.winstonToAr(self.balance, {
+        decimals: 5
+      });
     }
   }))
   .actions(self => ({
     setJwk: flow(function* setJwk(jwk: typeof self["jwk"]) {
       self.jwk = jwk;
-      self.address = yield arweave.wallets.jwkToAddress(jwk);
+      self.id = yield arweave.wallets.jwkToAddress(jwk);
+      self.balance = yield arweave.wallets.getBalance(self.address);
     })
   }));
 

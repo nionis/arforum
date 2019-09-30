@@ -17,7 +17,7 @@ const Post = observer(({ store }: IPost) => {
   const commentsSize = `${store.comments.size} ${
     store.comments.size === 1 ? "comment" : "comments"
   }`;
-  const category = `/c/${store.categoryId}`;
+  const category = `/c/${store.category}`;
   const displayName = store.from.displayName;
   const ago = format(store.createdAt);
 
@@ -28,17 +28,17 @@ const Post = observer(({ store }: IPost) => {
           <Votes store={store} />
         </Border>
         <div className="content">
-          <Item onClick={() => goto.post(store.categoryId, store.id)}>
+          <Item onClick={() => goto.post(store.category, store.id)}>
             <span>{store.title}</span>
           </Item>
           <Item>
             <span>{description}</span>
           </Item>
           <span className="comment">
-            <Item onClick={() => goto.post(store.categoryId, store.id)}>
+            <Item onClick={() => goto.post(store.category, store.id)}>
               {commentsSize}&nbsp;
             </Item>
-            <Item onClick={() => goto.category(store.categoryId)}>
+            <Item onClick={() => goto.category(store.category)}>
               {category}&nbsp;
             </Item>
             {app.size === "large" ? (

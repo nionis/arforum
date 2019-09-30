@@ -1,57 +1,59 @@
 import { types, flow } from "mobx-state-tree";
-import gql from "graphql-tag";
-import arweave, { graphql } from "src/arweave";
-import Primitive from "src/models/Primitive";
+import Transaction from "src/models/request/Transaction";
+import Fetch from "src/models/request/Fetch";
 import Category from "src/models/Category";
-import Transaction from "src/models/Transaction";
-import account from "src/stores/account";
-import { getNow, addTags } from "src/utils";
-import { forumId } from "src/env";
+import {
+  id,
+  getNow,
+  Reference,
+  category as tfCategory,
+  category
+} from "src/utils";
+import { appId, environment } from "src/env";
+import User from "./User";
 
 const Forum = types
-  .compose(
-    "Forum",
-    Primitive,
-    types.model({
-      categories: types.map(Category)
-    })
-  )
+  .model({
+    id,
+    categories: types.map(Reference(Category))
+  })
   .actions(self => ({
-    getCategories: flow(function* getCategories() {
-      const ids: string[] = yield graphql
-        .query({
-          query: gql`
-            query Categories {
-              transactions(
-                tags: [
-                  { name: "appId", value: "${forumId}" }
-                  { name: "type", value: "category" }
-                ]
-              ) {
-                id
+    getCategories: flow(function* getCategories({
+      categoryId
+    }: {
+      categoryId?: string;
+    }) {
+      const singleCategoryQuery = categoryId
+        ? `{ name: "id", value: "${categoryId}" }`
+        : "";
+
+      const categoriesRaw: any[] = yield Fetch.create().run({
+        query: `
+          query Categories {
+            transactions(
+              tags: [
+                { name: "appId", value: "${appId}" }
+                { name: "environment", value: "${environment}" }
+                { name: "type", value: "category" }
+                ${singleCategoryQuery}
+              ]
+            ) {
+              id
+              tags {
+                name
+                value
               }
             }
-          `
-        })
-        .then(res => res.data.transactions.map(tx => tx.id));
+          }
+        `,
+        getTxs: res => res.data.transactions,
+        fetchContent: false,
+        type: "text"
+      });
 
-      const categories: any[] = yield Promise.all(
-        ids.map(id => {
-          return arweave.transactions.get(id).then(async tx => {
-            const owner = tx.get("owner");
-            const from = await arweave.wallets.ownerToAddress(owner);
+      const categories = categoriesRaw.map(tfCategory.fromTransaction);
 
-            const data = JSON.parse(
-              tx.get("data", { decode: true, string: true })
-            );
-
-            return {
-              ...data,
-              from
-            };
-          });
-        })
-      );
+      if (!categories) return;
 
       categories.forEach(cat => {
         if (self.categories.has(cat.id)) return;
@@ -61,44 +63,29 @@ const Forum = types
             cat.id,
             Category.create({
               ...cat,
-              from: { address: cat.from }
+              from: User.create({ id: cat.from }) as any
             })
           );
         } catch (err) {
           console.error(err);
         }
+
+        return categories;
       });
     }),
 
     createCategory: flow(function* createCategory(name: string) {
-      if (!account.loggedIn) {
-        throw Error("user is not logged in");
-      }
-
       const id = name;
       const now = getNow();
 
-      const transaction: any = yield arweave
-        .createTransaction(
-          {
-            data: JSON.stringify({
-              id,
-              updatedAt: now,
-              createdAt: now
-            })
-          },
-          account.jwk
-        )
-        .then(tx => {
-          return addTags(tx, {
-            type: "category",
-            id,
-            updatedAt: now,
-            createdAt: now
-          });
-        });
-
-      return Transaction.create().run(transaction);
+      return Transaction.create().run(
+        tfCategory.toTransaction({
+          id,
+          description: "",
+          updatedAt: now,
+          createdAt: now
+        })
+      );
     })
   }));
 

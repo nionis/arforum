@@ -1,20 +1,12 @@
 import { types, flow, Instance } from "mobx-state-tree";
-import gql from "graphql-tag";
-import arweave, { graphql } from "src/arweave";
 import Primitive from "src/models/Primitive";
-import Transaction from "src/models/Transaction";
+import Fetch from "src/models/request/Fetch";
+import Transaction from "src/models/request/Transaction";
+import User from "src/models/User";
+import Vote from "src/models/Vote";
 import account from "src/stores/account";
-import { randomId, getNow, addTags, pickLatest } from "src/utils";
-import { forumId } from "src/env";
-
-const Vote = types.compose(
-  "Vote",
-  Primitive,
-  types.model({
-    id: types.identifier,
-    type: types.enumeration(["upvote", "downvote"])
-  })
-);
+import { randomId, getNow, pickLatest, vote as tfVote } from "src/utils";
+import { appId } from "src/env";
 
 const Votes = types
   .compose(
@@ -60,41 +52,30 @@ const Votes = types
   }))
   .actions(self => ({
     getVotes: flow(function* getVotes() {
-      const ids: string[] = yield graphql
-        .query({
-          query: gql`
-            query Votes {
-              transactions(
-                tags: [
-                  { name: "appId", value: "${forumId}" }
-                  { name: "type", value: "vote" }
-                  { name: "item", value: "${self.id}" }
-                ]
-              ) {
-                id
+      const votesRaw: any[] = yield Fetch.create().run({
+        query: `
+          query Votes {
+            transactions(
+              tags: [
+                { name: "appId", value: "${appId}" }
+                { name: "type", value: "vote" }
+                { name: "item", value: "${self.id}" }
+              ]
+            ) {
+              id
+              tags {
+                name
+                value
               }
             }
-          `
-        })
-        .then(res => res.data.transactions.map(tx => tx.id));
+          }
+        `,
+        getTxs: res => res.data.transactions,
+        fetchContent: true,
+        type: "text"
+      });
 
-      const votes: any[] = yield Promise.all(
-        ids.map(id => {
-          return arweave.transactions.get(id).then(async tx => {
-            const owner = tx.get("owner");
-            const from = await arweave.wallets.ownerToAddress(owner);
-
-            const data = JSON.parse(
-              tx.get("data", { decode: true, string: true })
-            );
-
-            return {
-              ...data,
-              from
-            };
-          });
-        })
-      );
+      const votes = votesRaw.map(tfVote.fromTransaction);
 
       votes.forEach(vote => {
         if (self.votes.has(vote.id)) return;
@@ -104,7 +85,7 @@ const Votes = types
             vote.id,
             Vote.create({
               ...vote,
-              from: { address: vote.from }
+              from: User.create({ id: vote.from }) as any
             })
           );
         } catch (err) {
@@ -114,37 +95,18 @@ const Votes = types
     }),
 
     vote: flow(function* vote(type: Instance<typeof Vote>["type"]) {
-      if (!account.loggedIn) {
-        throw Error("user is not logged in");
-      }
-
       const id = randomId();
       const now = getNow();
 
-      const transaction: any = yield arweave
-        .createTransaction(
-          {
-            data: JSON.stringify({
-              id,
-              item: self.id,
-              type,
-              updatedAt: now,
-              createdAt: now
-            })
-          },
-          account.jwk
-        )
-        .then(tx => {
-          return addTags(tx, {
-            type: "vote",
-            item: self.id,
-            id,
-            createdAt: now,
-            updatedAt: now
-          });
-        });
-
-      return Transaction.create().run(transaction);
+      return Transaction.create().run(
+        tfVote.toTransaction({
+          id,
+          type,
+          item: self.id,
+          updatedAt: now,
+          createdAt: now
+        })
+      );
     })
   }))
   .actions(self => ({

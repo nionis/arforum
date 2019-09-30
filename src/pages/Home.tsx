@@ -1,20 +1,36 @@
 import { observer } from "mobx-react";
+import { Instance } from "mobx-state-tree";
 import { flatMap } from "lodash";
+import PostModel from "src/models/Post";
 import app from "src/stores/app";
 import forum from "src/stores/forum";
 import Post from "src/components/Post";
 import Categories from "src/components/Categories";
 
+const { categoryId } = app.pathData;
+
+if (categoryId) {
+  forum.getCategories({ categoryId });
+} else {
+  forum.getCategories({});
+}
+
 export default observer(() => {
   const { categoryId } = app.pathData;
-  const categories = Array.from(forum.categories.values());
-  const posts = flatMap(categories, category =>
-    Array.from(category.posts.values())
-  ).filter(post => {
-    if (!categoryId) return true;
+  let posts: Instance<typeof PostModel>[] = [];
 
-    return post.categoryId === categoryId;
-  });
+  if (categoryId) {
+    if (!forum.categories.has(categoryId)) {
+      return <h1>loading</h1>;
+    }
+
+    posts = Array.from(forum.categories.get(categoryId).posts.values());
+  } else {
+    const categories = Array.from(forum.categories.values());
+    posts = flatMap(categories, category =>
+      Array.from(category.posts.values())
+    );
+  }
 
   return (
     <>
@@ -30,7 +46,6 @@ export default observer(() => {
           </div>
         </div>
       </div>
-
       <style jsx>{`
         .container {
           display: flex;

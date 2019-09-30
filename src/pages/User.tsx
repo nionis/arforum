@@ -7,9 +7,17 @@ import account from "src/stores/account";
 
 const { userId } = app.pathData;
 const isAccount = userId === account.address;
-const user = isAccount ? account : UserModel.create({ address: userId });
+const user = isAccount
+  ? account
+  : userId
+  ? UserModel.create({ id: userId })
+  : null;
 
 const User = observer(() => {
+  if (!user) {
+    return <h1>no user selected</h1>;
+  }
+
   const { colors } = app;
 
   return (
@@ -17,9 +25,7 @@ const User = observer(() => {
       <div className="container">
         <div className="padder">
           <Item>Hey {user.username || user.address}!</Item>
-          {user.username ? (
-            <Item textColor={colors.mutedText}>address: {user.address}</Item>
-          ) : null}
+          <Item textColor={colors.mutedText}>address: {user.address}</Item>
           {user.username ? (
             <div className="setupUsername">
               <Item>Setup username using&nbsp;</Item>

@@ -3,7 +3,6 @@ import { observer } from "mobx-react";
 import Post from "src/components/Post";
 import CreateComment from "src/components/CreateComment";
 import Comment from "src/components/Comment";
-import Button from "src/components/Button";
 import app from "src/stores/app";
 import forum from "src/stores/forum";
 

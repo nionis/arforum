@@ -1,19 +1,21 @@
 import { types, flow } from "mobx-state-tree";
-import gql from "graphql-tag";
-import arweave, { graphql } from "src/arweave";
 import Primitive from "src/models/Primitive";
+import Fetch from "src/models/request/Fetch";
+import HasOwner from "src/models/HasOwner";
+import User from "src/models/User";
 import Post from "src/models/Post";
-import Transaction from "src/models/Transaction";
-import account from "src/stores/account";
-import { randomId, getNow, addTags } from "src/utils";
-import { forumId } from "src/env";
+import Transaction from "src/models/request/Transaction";
+import { randomId, getNow, Reference, post as tfPost } from "src/utils";
+import { appId } from "src/env";
 
 const Category = types
   .compose(
     "Category",
     Primitive,
+    HasOwner,
     types.model({
-      posts: types.map(Post)
+      description: "",
+      posts: types.map(Reference(Post))
     })
   )
   .views(self => ({
@@ -23,55 +25,43 @@ const Category = types
   }))
   .actions(self => ({
     getPosts: flow(function* getPosts() {
-      const ids: string[] = yield graphql
-        .query({
-          query: gql`
-            query Posts {
-              transactions(
-                tags: [
-                  { name: "appId", value: "${forumId}" }
-                  { name: "type", value: "post" }
-                  { name: "category", value: "${self.id}" }
-                ]
-              ) {
-                id
+      const postsRaw: any[] = yield Fetch.create().run({
+        query: `
+          query Posts {
+            transactions(
+              tags: [
+                { name: "appId", value: "${appId}" }
+                { name: "type", value: "post" }
+                { name: "category", value: "${self.id}" }
+              ]
+            ) {
+              id
+              tags {
+                name
+                value
               }
             }
-          `
-        })
-        .then(res => res.data.transactions.map(tx => tx.id));
+          }
+        `,
+        getTxs: res => res.data.transactions,
+        fetchContent: true,
+        type: "text"
+      });
 
-      const posts: any[] = yield Promise.all(
-        ids.map(id => {
-          return arweave.transactions.get(id).then(async tx => {
-            const owner = tx.get("owner");
-            const from = await arweave.wallets.ownerToAddress(owner);
-
-            const data = JSON.parse(
-              tx.get("data", { decode: true, string: true })
-            );
-
-            return {
-              ...data,
-              from
-            };
-          });
-        })
-      );
+      const posts = postsRaw.map(tfPost.fromTransaction);
 
       posts.forEach(post => {
         try {
           if (self.posts.has(post.id)) {
             const _post = self.posts.get(post.id);
 
-            if (_post.updatedAt > post.updateAt) return;
+            if (_post.updatedAt > post.updatedAt) return;
           } else {
             self.posts.set(
               post.id,
               Post.create({
                 ...post,
-                from: { address: post.from },
-                categoryId: self.id
+                from: User.create({ id: post.from }) as any
               })
             );
           }
@@ -82,38 +72,19 @@ const Category = types
     }),
 
     createPost: flow(function* createPost(title: string, text: string) {
-      if (!account.loggedIn) {
-        throw Error("user is not logged in");
-      }
-
       const id = randomId();
       const now = getNow();
 
-      const transaction: any = yield arweave
-        .createTransaction(
-          {
-            data: JSON.stringify({
-              id,
-              title,
-              text,
-              previousIds: [],
-              updatedAt: now,
-              createdAt: now
-            })
-          },
-          account.jwk
-        )
-        .then(tx => {
-          return addTags(tx, {
-            type: "post",
-            category: self.id,
-            id,
-            createdAt: now,
-            updatedAt: now
-          });
-        });
-
-      return Transaction.create().run(transaction);
+      return Transaction.create().run(
+        tfPost.toTransaction({
+          id,
+          title,
+          text,
+          createdAt: now,
+          updatedAt: now,
+          category: self.id
+        })
+      );
     })
   }))
   .actions(self => ({

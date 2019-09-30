@@ -1,10 +1,8 @@
 import Forum from "src/models/Forum";
-import { forumId } from "src/env";
+import { appId } from "src/env";
 
 const forum = Forum.create({
-  id: forumId
+  id: appId
 });
-
-// forum.getCategories();
 
 export default forum;

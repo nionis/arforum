@@ -1,5 +1,10 @@
+/*
+  Initiate arweave, expose tiny graphql fetcher.
+  We use a custom graphql fetcher since we do
+  de-dup, caching ourselves since using apollo
+  or something similar would be overkill atm.
+*/
 import Arweave from "arweave/web";
-import ApolloClient from "apollo-boost";
 
 const arweave = Arweave.init({
   host: "arweave.net",
@@ -8,9 +13,15 @@ const arweave = Arweave.init({
   timeout: 60000
 });
 
-const graphql = new ApolloClient({
-  uri: "https://arweave.net/arql"
-});
+export const graphql = (query: string, variables?: any) => {
+  return fetch("https://arweave.net/arql", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: JSON.stringify({ query, variables })
+  }).then(res => res.json());
+};
 
-export { graphql };
 export default arweave;

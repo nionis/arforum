@@ -1,114 +1,91 @@
 import { types, flow } from "mobx-state-tree";
-import gql from "graphql-tag";
-import arweave, { graphql } from "src/arweave";
 import Primitive from "src/models/Primitive";
+import Fetch from "src/models/request/Fetch";
+import HasOwner from "src/models/HasOwner";
+import User from "src/models/User";
 import Votes from "src/models/Votes";
 import History from "src/models/History";
 import Comment from "src/models/Comment";
-import Transaction from "src/models/Transaction";
-import account from "src/stores/account";
-import { randomId, getNow, addTags } from "src/utils";
-import { forumId } from "src/env";
+import Transaction from "src/models/request/Transaction";
+import { randomId, getNow, comment as tfComment, comment } from "src/utils";
+import { appId } from "src/env";
 
 const Post = types
   .compose(
     "Post",
     Primitive,
+    HasOwner,
     Votes,
     History,
     types.model({
-      categoryId: types.maybe(types.string),
-      title: types.maybe(types.string),
-      text: types.maybe(types.string),
+      category: types.string,
+      title: "",
+      text: "",
       comments: types.map(Comment)
     })
   )
   .actions(self => ({
     updateText: flow(function* updateText(text: string) {
-      if (!account.loggedIn) {
-        throw Error("user is not logged in");
-      }
-
       const updatedAt = getNow();
       const previousIds = [].concat(self.previousIds, [self.id]);
 
-      const transaction: any = yield arweave
-        .createTransaction(
-          {
-            data: JSON.stringify({
-              id: self.id,
-              title: self.title,
-              text,
-              previousIds,
-              updatedAt,
-              createdAt: self.createdAt
-            })
-          },
-          account.jwk
-        )
-        .then(tx => {
-          return addTags(tx, {
-            type: "post",
-            category: self.categoryId,
-            id: self.id,
-            createdAt: self.createdAt,
-            updatedAt: updatedAt
-          });
-        });
-
-      return Transaction.create().run(transaction);
+      // return Transaction.create().run(
+      //   {
+      //     id: self.id,
+      //     title: self.title,
+      //     text,
+      //     previousIds,
+      //     updatedAt,
+      //     createdAt: self.createdAt
+      //   },
+      //   {
+      //     type: "post",
+      //     category: self.categoryId,
+      //     id: self.id,
+      //     createdAt: self.createdAt,
+      //     updatedAt: updatedAt
+      //   }
+      // );
     }),
 
     getComments: flow(function* getComments() {
-      const ids: string[] = yield graphql
-        .query({
-          query: gql`
-            query Comments {
-              transactions(
-                tags: [
-                  { name: "appId", value: "${forumId}" }
-                  { name: "type", value: "comment" }
-                  { name: "post", value: "${self.id}" }
-                ]
-              ) {
-                id
+      const commentsRaw: any[] = yield Fetch.create().run({
+        query: `
+          query Comments {
+            transactions(
+              tags: [
+                { name: "appId", value: "${appId}" }
+                { name: "type", value: "comment" }
+                { name: "post", value: "${self.id}" }
+              ]
+            ) {
+              id
+              tags {
+                name
+                value
               }
             }
-          `
-        })
-        .then(res => res.data.transactions.map(tx => tx.id));
+          }
+        `,
+        getTxs: res => res.data.transactions,
+        fetchContent: true,
+        type: "text"
+      });
 
-      const comments: any[] = yield Promise.all(
-        ids.map(id => {
-          return arweave.transactions.get(id).then(async tx => {
-            const owner = tx.get("owner");
-            const from = await arweave.wallets.ownerToAddress(owner);
-
-            const data = JSON.parse(
-              tx.get("data", { decode: true, string: true })
-            );
-
-            return {
-              ...data,
-              from
-            };
-          });
-        })
-      );
+      const comments = commentsRaw.map(tfComment.fromTransaction);
 
       comments.forEach(comment => {
         try {
           if (self.comments.has(comment.id)) {
             const _comment = self.comments.get(comment.id);
 
-            if (_comment.updatedAt > comment.updateAt) return;
+            if (_comment.updatedAt > comment.updatedAt) return;
           } else {
             self.comments.set(
               comment.id,
               Comment.create({
                 ...comment,
-                from: { address: comment.from },
-                post: self.id
+                from: User.create({ id: comment.from }) as any
               })
             );
           }
@@ -119,37 +96,18 @@ const Post = types
     }),
 
     createComment: flow(function* createComment(text: string) {
-      if (!account.loggedIn) {
-        throw Error("user is not logged in");
-      }
-
       const id = randomId();
       const now = getNow();
 
-      const transaction: any = yield arweave
-        .createTransaction(
-          {
-            data: JSON.stringify({
-              id,
-              text,
-              previousIds: [],
-              updatedAt: now,
-              createdAt: now
-            })
-          },
-          account.jwk
-        )
-        .then(tx => {
-          return addTags(tx, {
-            type: "comment",
-            post: self.id,
-            id,
-            createdAt: now,
-            updatedAt: now
-          });
-        });
-
-      return Transaction.create().run(transaction);
+      return Transaction.create().run(
+        tfComment.toTransaction({
+          id,
+          text,
+          updatedAt: now,
+          createdAt: now,
+          post: self.id
+        })
+      );
     })
   }))
   .actions(self => ({

@@ -1,21 +1,22 @@
 import { types, flow } from "mobx-state-tree";
-import arweave from "src/arweave";
 import Primitive from "src/models/Primitive";
+import HasOwner from "src/models/HasOwner";
 import Votes from "src/models/Votes";
 import History from "src/models/History";
-import Transaction from "src/models/Transaction";
+import Transaction from "src/models/request/Transaction";
 import account from "src/stores/account";
-import { getNow, addTags } from "src/utils";
+import { getNow } from "src/utils";
 
 const Comment = types
   .compose(
     "Comment",
     Primitive,
+    HasOwner,
     Votes,
     History,
     types.model({
-      postId: types.maybe(types.string),
-      text: types.maybe(types.string)
+      post: types.string,
+      text: ""
       // replies: types.array(types.reference(types.late(() => Comment)))
     })
   )
@@ -28,30 +29,22 @@ const Comment = types
       const updatedAt = getNow();
       const previousIds = [].concat(self.previousIds, [self.id]);
 
-      const transaction: any = yield arweave
-        .createTransaction(
-          {
-            data: JSON.stringify({
-              id: self.id,
-              text,
-              previousIds,
-              updatedAt,
-              createdAt: self.createdAt
-            })
-          },
-          account.jwk
-        )
-        .then(tx => {
-          return addTags(tx, {
-            type: "comment",
-            post: self.postId,
-            id: self.id,
-            createdAt: self.createdAt,
-            updatedAt: updatedAt
-          });
-        });
-
-      return Transaction.create().run(transaction);
+      // return Transaction.create().run(
+      //   JSON.stringify({
+      //     id: self.id,
+      //     text,
+      //     previousIds,
+      //     updatedAt,
+      //     createdAt: self.createdAt
+      //   }),
+      //   {
+      //     type: "comment",
+      //     post: self.postId,
+      //     id: self.id,
+      //     createdAt: self.createdAt,
+      //     updatedAt: updatedAt
+      //   }
+      // );
     })
   }));
 

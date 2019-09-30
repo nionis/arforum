@@ -1,9 +1,13 @@
 import { observer } from "mobx-react";
+import Modal from "@material-ui/core/Modal";
 import Border from "src/components/Border";
 import Item from "src/components/Item";
 import Tabs from "src/components/Tabs";
+import ModalModel from "src/models/Modal";
 import app, { goto } from "src/stores/app";
 import forum from "src/stores/forum";
+
+const store = ModalModel.create();
 
 const Categories = observer(() => {
   const categories = Array.from(forum.categories.values());
@@ -11,8 +15,25 @@ const Categories = observer(() => {
 
   return (
     <>
+      {/* <Modal
+        open={store.opened}
+        onClose={store.close}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        <Login onClose={store.close} />
+      </Modal> */}
+
       <div className="container">
         <Tabs direction="column">
+          <div className="item">
+            <Item onClick={() => forum.createCategory(String(Math.random()))}>
+              Create Category
+            </Item>
+          </div>
           <div className="item">
             <Item textColor={colors.mutedText}>Categories</Item>
           </div>

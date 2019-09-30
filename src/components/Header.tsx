@@ -1,28 +1,14 @@
 import { observer } from "mobx-react";
-import { types } from "mobx-state-tree";
 import Modal from "@material-ui/core/Modal";
 import { WbSunny } from "@material-ui/icons";
 import Login from "src/components/Login";
 import Tabs from "src/components/Tabs";
 import Item from "src/components/Item";
+import ModalModel from "src/models/Modal";
 import app, { goto } from "src/stores/app";
 import account from "src/stores/account";
 
-const store = types
-  .model("Header", {
-    opened: false
-  })
-  .actions(self => ({
-    open() {
-      self.opened = true;
-    },
-
-    close() {
-      console.log("here");
-      self.opened = false;
-    }
-  }))
-  .create();
+const store = ModalModel.create();
 
 const DisplayName = observer(() => {
   const { colors } = app;
@@ -61,13 +47,14 @@ const Header = observer(() => {
       >
         <Login onClose={store.close} />
       </Modal>
+
       <div className="container">
         <div className="innerBox">
           <Item onClick={() => goto.home()} style={{ fontWeight: "bold" }}>
             <span>ARforum</span>
           </Item>
           <div className="rightBox">
-            <Tabs>
+            <Tabs space="10px">
               <Item
                 onClick={app.swapTheme}
                 textColor={colors.mutedText}
@@ -75,6 +62,11 @@ const Header = observer(() => {
               >
                 <WbSunny />
               </Item>
+              {account.loggedIn ? (
+                <Item textColor={colors.mutedText}>
+                  <span>{account.balancePretty} AR</span>
+                </Item>
+              ) : null}
               <Item textColor={colors.mutedText}>
                 <DisplayName />
               </Item>
@@ -106,7 +98,6 @@ const Header = observer(() => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          width: 100px;
           height: 100%;
         }
       `}</style>

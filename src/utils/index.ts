@@ -1,3 +1,6 @@
+/*
+  expose all utils
+*/
 import uuid from "uuid/v4";
 
 export const randomId = () => uuid();
@@ -14,6 +17,15 @@ export const getClientSize = () => {
   };
 };
 
-export * from "./addTags";
-export * from "./pickLatest";
+// async timeout
+export const wait = (ms: number) => {
+  return new Promise<void>(resolve => {
+    setTimeout(resolve, ms);
+  });
+};
+
 export * from "./colors";
+export * from "./cache";
+export * from "./mst";
+export * from "./pickLatest";
+export * from "./transform";

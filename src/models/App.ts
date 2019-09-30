@@ -1,5 +1,6 @@
 import Router from "next/router";
 import { types } from "mobx-state-tree";
+import { throttle } from "lodash";
 import { getClientSize, getColors } from "src/utils";
 
 const App = types
@@ -74,10 +75,14 @@ const App = types
       Router.events.on("hashChangeStart", self.updatePath);
 
       // listen to screen resize
-      window.addEventListener("resize", () => {
-        const { width, height } = getClientSize();
-        self.updateSizes(width, height);
-      });
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          // this is not necessary
+          const { width, height } = getClientSize();
+          self.updateSizes(width, height);
+        }, 150)
+      );
     }
   }));
 
