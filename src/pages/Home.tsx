@@ -2,18 +2,11 @@ import { observer } from "mobx-react";
 import { Instance } from "mobx-state-tree";
 import { flatMap } from "lodash";
 import PostModel from "src/models/Post";
-import app from "src/stores/app";
-import forum from "src/stores/forum";
 import Post from "src/components/Post";
 import Categories from "src/components/Categories";
-
-const { categoryId } = app.pathData;
-
-if (categoryId) {
-  forum.getCategories({ categoryId });
-} else {
-  forum.getCategories({});
-}
+import Pagination from "src/components/Pagination";
+import app from "src/stores/app";
+import forum from "src/stores/forum";
 
 export default observer(() => {
   const { categoryId } = app.pathData;
@@ -32,6 +25,8 @@ export default observer(() => {
     );
   }
 
+  // const getPosts = () => {};
+
   return (
     <>
       <div className="container">
@@ -40,6 +35,15 @@ export default observer(() => {
             {posts.map(post => {
               return <Post key={post.id} store={post} showDescription={true} />;
             })}
+            {/* <Pagination fn={getPosts}>
+              {next => {
+                return posts.map(post => {
+                  return (
+                    <Post key={post.id} store={post} showDescription={true} />
+                  );
+                });
+              }}
+            </Pagination> */}
           </div>
           <div className="categoriesContainer">
             <Categories />

@@ -38,7 +38,7 @@ const Transaction = types
           transaction = await arweave
             .createTransaction(
               {
-                data: ops.content || ""
+                data: ops.content || " "
               },
               account.jwk
             )
@@ -50,13 +50,11 @@ const Transaction = types
               return tx;
             });
 
-          // const anchor_id: string = await arweave.api
-          //   .get("/tx_anchor")
-          //   .then(x => x.data);
+          const anchor_id = await arweave.api
+            .get("/tx_anchor")
+            .then(res => res.data);
 
-          // console.log({ anchor_id });
-
-          // (transaction.last_tx as string) = anchor_id;
+          (transaction.last_tx as string) = anchor_id;
 
           await arweave.transactions.sign(transaction, account.jwk);
 

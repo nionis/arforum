@@ -1,12 +1,12 @@
 import { Instance } from "mobx-state-tree";
 import Vote from "src/models/Vote";
-import * as utils from "./utils";
+import { fromMs, toMs } from "src/utils/timestamp";
+import { requiredTags } from "./utils";
 import { IToTransaction, IFromTransaction } from "./types";
 
 type ModelInstance = Instance<typeof Vote>;
-type Keys = "id" | "type" | "item" | "createdAt";
+type Keys = "type" | "item" | "createdAt";
 type Tags = {
-  id: string;
   type: "vote";
   item: string;
 };
@@ -19,13 +19,13 @@ export const toTransaction: IToTransaction<
   Content
 > = ops => {
   return {
+    id: undefined,
     tags: {
-      id: ops.id,
-      ...utils.fromMsToCreatedAtTags(ops.createdAt),
-
-      ...utils.requiredTags(),
+      ...fromMs(ops.createdAt),
+      ...requiredTags(),
       "Content-Type": "text/plain",
       type: "vote",
+      // TODO: could add type here
       item: ops.item
     },
     content: ops.type
@@ -39,10 +39,10 @@ export const fromTransaction: IFromTransaction<
   Content
 > = ops => {
   return {
-    id: ops.tags.id,
+    id: ops.id,
     type: ops.content,
     from: ops.tags.from,
     item: ops.tags.item,
-    createdAt: utils.toMsFromCreatedAtTags(ops.tags)
+    createdAt: toMs(ops.tags)
   };
 };

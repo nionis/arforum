@@ -3,7 +3,7 @@ import { id } from "src/utils";
 
 const Primitive = types.model("Primitive", {
   id,
-  createdAt: types.number
+  createdAt: types.maybe(types.number)
 });
 
 export default Primitive;

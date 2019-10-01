@@ -46,7 +46,10 @@ const Login = observer(
         const contents = e.target.result as string;
 
         try {
-          account.setJwk(JSON.parse(contents)).then(onClose);
+          account.setJwk(JSON.parse(contents)).then(() => {
+            account.getUsername();
+            onClose();
+          });
         } catch (err) {
           store.onError();
         }

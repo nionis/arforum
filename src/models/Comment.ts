@@ -4,7 +4,7 @@ import HasOwner from "src/models/HasOwner";
 import Votes from "src/models/Votes";
 import Transaction from "src/models/request/Transaction";
 import Editable from "src/models/Editable";
-import { randomId, getNow, comment as tfComment } from "src/utils";
+import { getNow, comment as tfComment } from "src/utils";
 
 const Comment = types
   .compose(
@@ -21,15 +21,12 @@ const Comment = types
   )
   .actions(self => ({
     updateText: flow(function* updateText(text: string) {
-      const id = randomId();
       const now = getNow();
       const editOf = self.id;
 
       Transaction.create().run(
         tfComment.toTransaction({
-          id,
           text,
-
           createdAt: now,
           post: self.id,
           editOf: editOf,
@@ -39,14 +36,11 @@ const Comment = types
     }),
 
     reply: flow(function* reply(text: string) {
-      const id = randomId();
       const now = getNow();
 
       Transaction.create().run(
         tfComment.toTransaction({
-          id,
           text,
-
           createdAt: now,
           post: self.post,
           editOf: undefined,

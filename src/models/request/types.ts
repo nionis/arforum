@@ -1,25 +1,12 @@
-export interface ITag {
-  name: string;
-  value: string;
-}
-
-export interface ITx {
+export type IFetchResult<T extends { [key: string]: any }> = {
   id: string;
-  tags?: ITag[];
-}
-
-export interface ITxNormalized {
-  id: string;
-  tags: {
-    [key: string]: ITag;
-  };
   content?: any;
-}
+} & T;
 
-export interface IRunOps {
+export interface IRunOps<T = any> {
   query: string;
   variables?: any;
-  getTxs: (res: any) => ITx[];
+  getData: (res: any) => IFetchResult<T>;
   fetchContent?: boolean;
   type?: "text" | "json" | "binary";
   forceRefetch?: boolean;

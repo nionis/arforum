@@ -28,10 +28,10 @@ interface IPost {
 const Post = observer(({ store, showDescription }: IPost) => {
   const { colors } = app;
   const description = store.text.substring(0, 10);
-  const commentsSize = `${store.comments.size} ${
-    store.comments.size === 1 ? "comment" : "comments"
+  const commentsSize = `${store.commentsCount} ${
+    store.commentsCount === 1 ? "comment" : "comments"
   }`;
-  const category = `/c/${store.category}`;
+  const categoryUrl = `/c/${store.category}`;
   const displayName = store.from.displayName;
   const ago = format(store.createdAt);
 
@@ -57,7 +57,7 @@ const Post = observer(({ store, showDescription }: IPost) => {
               {commentsSize}&nbsp;
             </Item>
             <Item onClick={() => goto.category(store.category)}>
-              {category}&nbsp;
+              {categoryUrl}&nbsp;
             </Item>
             {app.size === "large" ? (
               <>

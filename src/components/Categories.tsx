@@ -15,7 +15,8 @@ const Categories = observer(() => {
       <div className="container">
         <div className="createCategory">
           <Button
-            onClick={goto.createCategory}
+            onClick={() => forum.createCategory("puppies")}
+            // onClick={goto.createCategory}
             style={{ width: "100%", padding: "10px", height: "50px" }}
           >
             Create Category
@@ -40,7 +41,12 @@ const Categories = observer(() => {
                     width="2px"
                     style={{ padding: "10px" }}
                   >
-                    <Item onClick={() => goto.category(category.id)}>
+                    <Item
+                      onClick={() =>
+                        category.createPost("hello world", "bye world")
+                      }
+                    >
+                      {/* <Item onClick={() => goto.category(category.id)}> */}
                       {category.name}
                     </Item>
                   </Border>

@@ -5,7 +5,7 @@ import Transaction from "src/models/request/Transaction";
 import User from "src/models/User";
 import Vote from "src/models/Vote";
 import account from "src/stores/account";
-import { randomId, getNow, pickLatest, vote as tfVote } from "src/utils";
+import { getNow, pickLatest, vote as tfVote } from "src/utils";
 import { appId } from "src/env";
 
 const Votes = types
@@ -70,7 +70,7 @@ const Votes = types
             }
           }
         `,
-        getTxs: res => res.data.transactions,
+        getData: res => res.data.transactions,
         fetchContent: true,
         type: "text"
       });
@@ -95,23 +95,16 @@ const Votes = types
     }),
 
     vote: flow(function* vote(type: Instance<typeof Vote>["type"]) {
-      const id = randomId();
       const now = getNow();
 
       return Transaction.create().run(
         tfVote.toTransaction({
-          id,
           type,
           item: self.id,
           createdAt: now
         })
       );
     })
-  }))
-  .actions(self => ({
-    afterCreate() {
-      self.getVotes();
-    }
   }));
 
 export default Votes;

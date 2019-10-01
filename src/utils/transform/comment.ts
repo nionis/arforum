@@ -1,12 +1,12 @@
 import { Instance } from "mobx-state-tree";
 import Comment from "src/models/Comment";
-import * as utils from "./utils";
+import { fromMs, toMs } from "src/utils/timestamp";
+import { requiredTags } from "./utils";
 import { IToTransaction, IFromTransaction } from "./types";
 
 type ModelInstance = Instance<typeof Comment>;
-type Keys = "id" | "text" | "createdAt" | "post" | "editOf" | "replyOf";
+type Keys = "text" | "createdAt" | "post" | "editOf" | "replyOf";
 type Tags = {
-  id: string;
   type: "comment";
   post: string;
   editOf: string;
@@ -21,10 +21,10 @@ export const toTransaction: IToTransaction<
   Content
 > = ops => {
   return {
+    id: undefined,
     tags: {
-      id: ops.id,
-      ...utils.fromMsToCreatedAtTags(ops.createdAt),
-      ...utils.requiredTags(),
+      ...fromMs(ops.createdAt),
+      ...requiredTags(),
       "Content-Type": "text/plain",
       type: "comment",
       post: ops.post,
@@ -42,11 +42,11 @@ export const fromTransaction: IFromTransaction<
   Content
 > = ops => {
   return {
-    id: ops.tags.id,
+    id: ops.id,
     text: ops.content,
     from: ops.tags.from,
     post: ops.tags.post,
-    createdAt: utils.toMsFromCreatedAtTags(ops.tags),
+    createdAt: toMs(ops.tags),
     editOf: ops.tags.editOf,
     replyOf: ops.tags.replyOf
   };

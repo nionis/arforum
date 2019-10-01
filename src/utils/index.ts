@@ -1,10 +1,6 @@
 /*
   expose all utils
 */
-import uuid from "uuid/v4";
-
-export const randomId = () => uuid();
-
 export const getNow = () => Number(new Date());
 
 export const getClientSize = () => {
@@ -27,6 +23,7 @@ export const wait = (ms: number) => {
 export * from "./colors";
 export * from "./transform";
 export * from "./cache";
+export * from "./graphql";
 export * from "./mst";
 export * from "./pagination";
 export * from "./pickLatest";

@@ -7,12 +7,7 @@ import Votes from "src/models/Votes";
 import Editable from "src/models/Editable";
 import Comment from "src/models/Comment";
 import Transaction from "src/models/request/Transaction";
-import {
-  randomId,
-  getNow,
-  comment as tfComment,
-  post as tfPost
-} from "src/utils";
+import { getNow, comment as tfComment, post as tfPost } from "src/utils";
 import { appId } from "src/env";
 
 const Post = types
@@ -26,18 +21,22 @@ const Post = types
       category: types.string,
       title: "",
       text: "",
-      comments: types.map(Comment)
+      comments: types.map(Comment),
+      commentsCountRemote: 0
     })
   )
+  .views(self => ({
+    get commentsCount() {
+      return self.comments.size || self.commentsCountRemote;
+    }
+  }))
   .actions(self => ({
     updateText: flow(function* updateText(text: string) {
-      const id = randomId();
       const now = getNow();
       const editOf = self.id;
 
       Transaction.create().run(
         tfPost.toTransaction({
-          id,
           title: self.title,
           text,
           editOf,
@@ -66,7 +65,7 @@ const Post = types
             }
           }
         `,
-        getTxs: res => res.data.transactions,
+        getData: res => res.data.transactions,
         fetchContent: true,
         type: "text"
       });
@@ -89,12 +88,10 @@ const Post = types
     }),
 
     createComment: flow(function* createComment(text: string) {
-      const id = randomId();
       const now = getNow();
 
       return Transaction.create().run(
         tfComment.toTransaction({
-          id,
           text,
           createdAt: now,
           post: self.id,
@@ -103,11 +100,6 @@ const Post = types
         })
       );
     })
-  }))
-  .actions(self => ({
-    afterCreate() {
-      self.getComments();
-    }
   }));
 
 export default Post;

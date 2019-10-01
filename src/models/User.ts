@@ -40,14 +40,11 @@ const User = types
                 ]
               ) {
                 id
-                tags {
-                  name
-                  value
-                }
+                unixTime: tagValue(tagName: "Unix-Time")
               }
             }
           `,
-          getTxs: res => res.data.transactions,
+          getData: res => res.data.transactions,
           type: "text",
           fetchContent: true
         })
@@ -55,7 +52,7 @@ const User = types
           return (items || []).map(item => {
             return {
               name: item.content,
-              createdAt: Number(item.tags["Unix-Time"])
+              createdAt: Number(item.unixTime)
             };
           });
         });
@@ -66,20 +63,6 @@ const User = types
         self.username = item.name;
       }
     })
-  }))
-  .actions(self => ({
-    afterCreate() {
-      if (self.address) {
-        self.getUsername();
-      } else {
-        const dispatch = when(
-          () => !!self.address,
-          () => {
-            self.getUsername().then(() => dispatch());
-          }
-        );
-      }
-    }
   }));
 
 export default User;

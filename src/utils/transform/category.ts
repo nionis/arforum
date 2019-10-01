@@ -1,16 +1,16 @@
 import { Instance } from "mobx-state-tree";
 import Category from "src/models/Category";
-import * as utils from "./utils";
+import { fromMs, toMs } from "src/utils/timestamp";
+import { requiredTags } from "./utils";
 import { IToTransaction, IFromTransaction } from "./types";
 
 type ModelInstance = Instance<typeof Category>;
-type Keys = "id" | "description" | "createdAt";
+type Keys = "name" | "description" | "createdAt";
 type Tags = {
-  id: string;
-  description: string;
+  name: string;
   type: "category";
 };
-type Content = undefined;
+type Content = "description";
 
 export const toTransaction: IToTransaction<
   ModelInstance,
@@ -19,15 +19,18 @@ export const toTransaction: IToTransaction<
   Content
 > = ops => {
   return {
+    id: undefined,
     tags: {
-      id: ops.id,
-      description: ops.description,
-      ...utils.fromMsToCreatedAtTags(ops.createdAt),
-      ...utils.requiredTags(),
-      "Content-Type": "text/plain",
+      name: ops.name, // not needed
+      ...fromMs(ops.createdAt),
+      ...requiredTags(),
+      "Content-Type": "application/json",
       type: "category"
     },
-    content: undefined
+    content: JSON.stringify({
+      name: ops.name,
+      description: ops.description
+    })
   };
 };
 
@@ -37,10 +40,13 @@ export const fromTransaction: IFromTransaction<
   Tags,
   Content
 > = ops => {
+  const content = (ops.content || {}) as any;
+
   return {
-    id: ops.tags.id,
-    description: ops.tags.description,
+    id: ops.id,
+    name: ops.tags.name,
+    description: content.description,
     from: ops.tags.from,
-    createdAt: utils.toMsFromCreatedAtTags(ops.tags)
+    createdAt: toMs(ops.tags)
   };
 };

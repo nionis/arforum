@@ -3,7 +3,7 @@ import User from "src/models/User";
 import { Reference } from "src/utils";
 
 const HasOwner = types.model("HasOwner", {
-  from: Reference(User)
+  from: types.maybe(Reference(User))
 });
 
 export default HasOwner;

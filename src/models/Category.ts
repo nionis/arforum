@@ -1,11 +1,11 @@
-import { types, flow } from "mobx-state-tree";
+import { types, flow, Instance } from "mobx-state-tree";
 import Primitive from "src/models/Primitive";
 import HasOwner from "src/models/HasOwner";
 import User from "src/models/User";
 import Post from "src/models/Post";
 import fetches from "src/stores/fetches";
-import Transaction from "src/models/request/Transaction";
-import { randomId, getNow, Reference, post as tfPost } from "src/utils";
+import transactions from "src/stores/transactions";
+import { getNow, Reference, post as tfPost } from "src/utils";
 import { appId } from "src/env";
 
 const Category = types
@@ -14,17 +14,37 @@ const Category = types
     Primitive,
     HasOwner,
     types.model({
+      name: "",
       description: "",
       posts: types.map(Reference(Post))
     })
   )
   .views(self => ({
-    get name() {
-      return self.id;
+    displayName() {
+      return self.name || `${self.id.substring(0, 4)}..`;
     }
   }))
   .actions(self => ({
-    getPosts: flow(function* getPosts() {
+    setPost(post: Instance<typeof Post>) {
+      self.posts.set(post.id, post);
+
+      return self.posts.get(post.id);
+    }
+  }))
+
+  .actions(self => ({
+    getPosts: flow(function* getPosts({
+      shallow,
+      month
+    }: {
+      shallow: boolean;
+      month?: number;
+    }) {
+      const specificMonth =
+        typeof month !== "undefined"
+          ? `{ name: "months", value: "${month}" }`
+          : "";
+
       const postsRaw: any[] = yield fetches.add({
         query: `
           query Posts {
@@ -33,6 +53,7 @@ const Category = types
                 { name: "appId", value: "${appId}" }
                 { name: "type", value: "post" }
                 { name: "category", value: "${self.id}" }
+                ${specificMonth}
               ]
             ) {
               id
@@ -43,8 +64,8 @@ const Category = types
             }
           }
         `,
-        getTxs: res => res.data.transactions,
-        fetchContent: true,
+        getData: res => res.data.transactions,
+        fetchContent: !shallow,
         type: "text"
       });
 
@@ -66,12 +87,10 @@ const Category = types
     }),
 
     createPost: flow(function* createPost(title: string, text: string) {
-      const id = randomId();
       const now = getNow();
 
-      return Transaction.create().run(
+      transactions.add(
         tfPost.toTransaction({
-          id,
           title,
           text,
           createdAt: now,
@@ -80,11 +99,6 @@ const Category = types
         })
       );
     })
-  }))
-  .actions(self => ({
-    afterCreate() {
-      self.getPosts();
-    }
   }));
 
 export default Category;

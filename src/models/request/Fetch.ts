@@ -8,7 +8,7 @@
 import { types } from "mobx-state-tree";
 import arweave, { graphql } from "src/arweave";
 import Request from "src/models/request/Request";
-import { ITxNormalized, IRunOps } from "src/models/request/types";
+import { IFetchResult, IRunOps } from "src/models/request/types";
 
 const Fetch = types
   .compose(
@@ -17,38 +17,35 @@ const Fetch = types
     types.model({})
   )
   .actions(self => ({
-    run: (ops: IRunOps) => {
-      return self.track<ITxNormalized[]>(async () => {
-        let txs: ITxNormalized[] = await graphql(ops.query, ops.variables)
-          .then(ops.getTxs)
-          .then(txs => {
-            return txs.map(tx => {
-              const tags: ITxNormalized["tags"] = (tx.tags || []).reduce(
-                (result, tag) => {
-                  result[tag.name] = tag.value;
+    run: <R>(ops: IRunOps) => {
+      return self.track<IFetchResult<R>[]>(async () => {
+        let data = await graphql(ops.query, ops.variables).then(ops.getData);
 
-                  return result;
-                },
-                {}
-              );
+        // .then(txs => {
+        //   return txs.map(tx => {
+        //     const tags = (tx.tags || []).reduce((result, tag) => {
+        //       result[tag.name] = tag.value;
 
-              return {
-                id: tx.id,
-                tags
-              };
-            });
-          });
+        //       return result;
+        //     }, {});
+
+        //     return {
+        //       ...tx,
+        //       tags
+        //     };
+        //   });
+        // });
 
         if (ops.fetchContent) {
-          txs = await Promise.all(
-            txs.map(tx => {
-              return arweave.transactions.get(tx.id).then(async txData => {
+          data = await Promise.all(
+            data.map(data => {
+              return arweave.transactions.get(data.id).then(async tx => {
                 ops.type = ops.type || "json";
 
                 const isBinary = ops.type === "binary";
                 const shouldParse = ops.type === "json";
 
-                let content = txData.get("data", {
+                let content = tx.get("data", {
                   decode: true,
                   string: !isBinary
                 } as any) as any;
@@ -58,7 +55,7 @@ const Fetch = types
                 }
 
                 return {
-                  ...tx,
+                  ...data,
                   content
                 };
               });
@@ -66,7 +63,7 @@ const Fetch = types
           );
         }
 
-        return txs;
+        return data;
       });
     }
   }));

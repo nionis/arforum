@@ -1,12 +1,12 @@
 import { Instance } from "mobx-state-tree";
 import Post from "src/models/Post";
-import * as utils from "./utils";
+import { fromMs, toMs } from "src/utils/timestamp";
+import { requiredTags } from "./utils";
 import { IToTransaction, IFromTransaction } from "./types";
 
 type ModelInstance = Instance<typeof Post>;
-type Keys = "id" | "title" | "text" | "createdAt" | "category" | "editOf";
+type Keys = "title" | "text" | "createdAt" | "category" | "editOf";
 type Tags = {
-  id: string;
   title: string;
   type: "post";
   category: string;
@@ -21,11 +21,12 @@ export const toTransaction: IToTransaction<
   Content
 > = ops => {
   return {
+    id: undefined,
     tags: {
-      id: ops.id,
-      title: ops.title,
-      ...utils.fromMsToCreatedAtTags(ops.createdAt),
-      ...utils.requiredTags(),
+      title: ops.title, // TODO: could be in content
+      // TODO: could add description
+      ...fromMs(ops.createdAt),
+      ...requiredTags(),
       "Content-Type": "text/plain",
       type: "post",
       category: ops.category,
@@ -42,12 +43,12 @@ export const fromTransaction: IFromTransaction<
   Content
 > = ops => {
   return {
-    id: ops.tags.id,
+    id: ops.id,
     title: ops.tags.title,
     text: ops.content,
     from: ops.tags.from,
     category: ops.tags.category,
     editOf: ops.tags.editOf,
-    createdAt: utils.toMsFromCreatedAtTags(ops.tags)
+    createdAt: toMs(ops.tags)
   };
 };

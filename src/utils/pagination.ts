@@ -1,6 +1,6 @@
 import { fromMs } from "src/utils";
 
-export const Pagination = async (
+export const Pagination = (
   start: number,
   fn: ({ month: number }) => Promise<any>
 ) => {

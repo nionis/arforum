@@ -10,7 +10,7 @@ const arweave = Arweave.init({
   host: "arweave.net",
   protocol: "https",
   port: 443,
-  timeout: 60000
+  timeout: 120e3
 });
 
 export const graphql = (query: string, variables?: any) => {

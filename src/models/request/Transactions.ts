@@ -4,10 +4,11 @@
 import { types, flow } from "mobx-state-tree";
 import TransactionModel from "src/models/request/Transaction";
 import cache from "src/stores/cache";
-import { randomId, Reference, ITransactionResult } from "src/utils";
+import { Reference, ITransactionResult } from "src/utils";
 
 const Transactions = types
   .model("Transactions", {
+    latestId: 0,
     store: types.map(Reference(TransactionModel))
   })
   .actions(self => ({
@@ -18,7 +19,7 @@ const Transactions = types
   }))
   .actions(self => ({
     add: flow(function* flow(ops: ITransactionResult<any, any>) {
-      const id = randomId();
+      const id = String(++self.latestId);
 
       self.store.set(
         id,

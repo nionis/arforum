@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { observer } from "mobx-react";
 import Border from "src/components/Border";
 
@@ -31,23 +32,25 @@ const Tabs = observer(({ children, direction = "row", space }: ITabs) => {
       {children.map((child, i) => {
         const isLast = children.length - 1 === i;
 
-        if (isLast) {
-          return child;
-        } else {
-          return (
-            <>
-              {child}
-              <Border
-                right={isRight}
-                bottom={isBottom}
-                style={{
-                  height: "100%",
-                  ...spaceStyle
-                }}
-              />
-            </>
-          );
-        }
+        return (
+          <Fragment key={i}>
+            {isLast ? (
+              child
+            ) : (
+              <>
+                {child}
+                <Border
+                  right={isRight}
+                  bottom={isBottom}
+                  style={{
+                    height: "100%",
+                    ...spaceStyle
+                  }}
+                />
+              </>
+            )}
+          </Fragment>
+        );
       })}
     </>
   );
