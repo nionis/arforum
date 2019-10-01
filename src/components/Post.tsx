@@ -1,17 +1,31 @@
 import { observer } from "mobx-react";
-import { Instance } from "mobx-state-tree";
+import { types, Instance, unprotect } from "mobx-state-tree";
 import { format } from "timeago.js";
+import ReactMarkdown from "react-markdown";
+import { Edit } from "@material-ui/icons";
 import Item from "src/components/Item";
 import Votes from "src/components/Votes";
 import Border from "src/components/Border";
 import PostModel from "src/models/Post";
+import account from "src/stores/account";
 import app, { goto } from "src/stores/app";
+
+const uiStore = types
+  .model("Post", {
+    editing: false
+  })
+  .actions(self => {
+    unprotect(self);
+    return {};
+  })
+  .create();
 
 interface IPost {
   store: Instance<typeof PostModel>;
+  showDescription?: boolean;
 }
 
-const Post = observer(({ store }: IPost) => {
+const Post = observer(({ store, showDescription }: IPost) => {
   const { colors } = app;
   const description = store.text.substring(0, 10);
   const commentsSize = `${store.comments.size} ${
@@ -31,8 +45,12 @@ const Post = observer(({ store }: IPost) => {
           <Item onClick={() => goto.post(store.category, store.id)}>
             <span>{store.title}</span>
           </Item>
-          <Item>
-            <span>{description}</span>
+          <Item textColor={showDescription ? colors.mutedText : undefined}>
+            {showDescription ? (
+              <span>{description}</span>
+            ) : (
+              <ReactMarkdown source={store.text} />
+            )}
           </Item>
           <span className="comment">
             <Item onClick={() => goto.post(store.category, store.id)}>
@@ -52,6 +70,13 @@ const Post = observer(({ store }: IPost) => {
             ) : null}
           </span>
         </div>
+        {store.from.address === account.address ? (
+          <div className="edit">
+            <Item onClick={() => (uiStore.editing = true)}>
+              <Edit />
+            </Item>
+          </div>
+        ) : null}
       </div>
 
       <style jsx>{`
@@ -72,7 +97,10 @@ const Post = observer(({ store }: IPost) => {
           text-align: left;
           flex-direction: column;
           padding-left: 10px;
+          padding-top: 10px;
+          padding-bottom: 10px;
           overflow: hidden;
+          flex: 1 0 0;
         }
 
         .comment {
@@ -80,6 +108,11 @@ const Post = observer(({ store }: IPost) => {
           text-overflow: ellipsis;
           white-space: nowrap;
           overflow: hidden;
+        }
+
+        .edit {
+          padding-right: 10px;
+          padding-top: 10px;
         }
       `}</style>
     </>

@@ -2,18 +2,22 @@ import React, { forwardRef, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { types } from "mobx-state-tree";
 import { observer } from "mobx-react";
+import Modal from "@material-ui/core/Modal";
 import { ArrowDownward } from "@material-ui/icons";
+import Item from "src/components/Item";
+import Link from "src/components/Link";
+import ModalModel from "src/models/Modal";
 import app from "src/stores/app";
 import account from "src/stores/account";
 
-interface ILogin {
-  onClose: () => any;
-}
-
-const store = types
-  .model("Login", {
-    error: types.maybe(types.string)
-  })
+export const store = types
+  .compose(
+    "Login",
+    ModalModel,
+    types.model("Login", {
+      error: types.maybe(types.string)
+    })
+  )
   .actions(self => ({
     onError() {
       self.error =
@@ -25,6 +29,10 @@ const store = types
     }
   }))
   .create();
+
+interface ILogin {
+  onClose: () => any;
+}
 
 const Login = observer(
   forwardRef(({ onClose }: ILogin, ref: React.RefObject<HTMLDivElement>) => {
@@ -47,22 +55,31 @@ const Login = observer(
       reader.readAsText(file);
     }, []);
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
-      onDrop
+      onDrop,
+      multiple: false
     });
     const { colors } = app;
 
     return (
       <>
-        <div className="container" {...getRootProps()} ref={ref}>
-          <input {...getInputProps()} />
-          <span>Drop a wallet key file to login</span>
-          <ArrowDownward
-            style={{
-              width: "80px",
-              height: "80px"
-            }}
-          />
-          <span className="error">{store.error}</span>
+        <div className="container">
+          <div className="dropzone" {...getRootProps()} ref={ref}>
+            <input {...getInputProps()} />
+            <span>Drop a wallet key file to login</span>
+            <ArrowDownward
+              style={{
+                width: "80px",
+                height: "80px"
+              }}
+            />
+            <span className="error">{store.error}</span>
+          </div>
+          <div className="new">
+            <Item>new here?&nbsp;</Item>
+            <Link href="https://tokens.arweave.org/" target="_blank">
+              get a free wallet!
+            </Link>
+          </div>
         </div>
 
         <style jsx>{`
@@ -73,12 +90,30 @@ const Login = observer(
             flex-direction: column;
             width: ${app.size === "large" ? "50vw" : "100vw"};
             height: 50vh;
-            cursor: pointer;
             color: ${colors.normalText};
             background-color: ${isDragActive
               ? colors.activeBackground
               : colors.pageBackground};
             border: 1px solid ${colors.border};
+          }
+
+          .dropzone {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            cursor: pointer;
+            width: 100%;
+            height: 80%;
+          }
+
+          .new {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            width: 100%;
+            height: 20%;
           }
 
           .error {
@@ -90,4 +125,22 @@ const Login = observer(
   })
 );
 
-export default Login;
+const LoginModal = observer(() => {
+  return (
+    <Modal
+      open={store.opened}
+      onClose={store.close}
+      disableAutoFocus={true}
+      disableEnforceFocus={true}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}
+    >
+      <Login onClose={store.close} />
+    </Modal>
+  );
+});
+
+export default LoginModal;

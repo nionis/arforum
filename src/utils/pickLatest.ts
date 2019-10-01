@@ -8,7 +8,7 @@ import { sortBy } from "lodash";
 import Primitive from "src/models/Primitive";
 
 const pickLatest = <T extends Instance<typeof Primitive>>(items: T[]) => {
-  return sortBy(items, item => item.updatedAt).reverse();
+  return sortBy(items, item => item.createdAt).reverse();
 };
 
 export { pickLatest };

@@ -4,7 +4,7 @@ import * as utils from "./utils";
 import { IToTransaction, IFromTransaction } from "./types";
 
 type ModelInstance = Instance<typeof Category>;
-type Keys = "id" | "description" | "createdAt" | "updatedAt";
+type Keys = "id" | "description" | "createdAt";
 type Tags = {
   id: string;
   description: string;
@@ -23,7 +23,6 @@ export const toTransaction: IToTransaction<
       id: ops.id,
       description: ops.description,
       ...utils.fromMsToCreatedAtTags(ops.createdAt),
-      ...utils.fromMsToUpdatedAtTags(ops.updatedAt),
       ...utils.requiredTags(),
       "Content-Type": "text/plain",
       type: "category"
@@ -42,7 +41,6 @@ export const fromTransaction: IFromTransaction<
     id: ops.tags.id,
     description: ops.tags.description,
     from: ops.tags.from,
-    createdAt: utils.toMsFromCreatedAtTags(ops.tags),
-    updatedAt: utils.toMsFromUpdatedAtTags(ops.tags)
+    createdAt: utils.toMsFromCreatedAtTags(ops.tags)
   };
 };

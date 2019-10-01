@@ -28,12 +28,10 @@ const User = types
   }))
   .actions(self => ({
     getUsername: flow(function* getUsername() {
-      console.log("getUsername", self.address);
-
       const items: any[] = yield fetches
         .add({
           query: `
-            query Votes {
+            query Names {
               transactions(
                 tags: [
                   { name: "App-Name", value: "arweave-id" }
@@ -54,7 +52,6 @@ const User = types
           fetchContent: true
         })
         .then((items: any) => {
-          console.log(items);
           return (items || []).map(item => {
             return {
               name: item.content,
@@ -64,7 +61,6 @@ const User = types
         });
 
       const item = maxBy(items, o => o.createdAt);
-      console.log("getUsername", item);
 
       if (item) {
         self.username = item.name;

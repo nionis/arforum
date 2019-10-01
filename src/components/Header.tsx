@@ -1,21 +1,17 @@
 import { observer } from "mobx-react";
-import Modal from "@material-ui/core/Modal";
 import { WbSunny } from "@material-ui/icons";
-import Login from "src/components/Login";
+import Login, { store as loginStore } from "src/components/Login";
 import Tabs from "src/components/Tabs";
 import Item from "src/components/Item";
-import ModalModel from "src/models/Modal";
 import app, { goto } from "src/stores/app";
 import account from "src/stores/account";
-
-const store = ModalModel.create();
 
 const DisplayName = observer(() => {
   const { colors } = app;
 
   if (!account.loggedIn) {
     return (
-      <Item onClick={store.open} textColor={colors.mutedText}>
+      <Item onClick={loginStore.open} textColor={colors.mutedText}>
         login
       </Item>
     );
@@ -36,18 +32,7 @@ const Header = observer(() => {
 
   return (
     <>
-      <Modal
-        open={store.opened}
-        onClose={store.close}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}
-      >
-        <Login onClose={store.close} />
-      </Modal>
-
+      <Login />
       <div className="container">
         <div className="innerBox">
           <Item onClick={() => goto.home()} style={{ fontWeight: "bold" }}>

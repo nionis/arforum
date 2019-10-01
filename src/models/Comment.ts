@@ -2,10 +2,9 @@ import { types, flow } from "mobx-state-tree";
 import Primitive from "src/models/Primitive";
 import HasOwner from "src/models/HasOwner";
 import Votes from "src/models/Votes";
-import History from "src/models/History";
 import Transaction from "src/models/request/Transaction";
-import account from "src/stores/account";
-import { getNow } from "src/utils";
+import Editable from "src/models/Editable";
+import { randomId, getNow, comment as tfComment } from "src/utils";
 
 const Comment = types
   .compose(
@@ -13,38 +12,47 @@ const Comment = types
     Primitive,
     HasOwner,
     Votes,
-    History,
+    Editable,
     types.model({
       post: types.string,
-      text: ""
-      // replies: types.array(types.reference(types.late(() => Comment)))
+      text: "",
+      replyOf: types.maybe(types.string)
     })
   )
   .actions(self => ({
     updateText: flow(function* updateText(text: string) {
-      if (!account.loggedIn) {
-        throw Error("user is not logged in");
-      }
+      const id = randomId();
+      const now = getNow();
+      const editOf = self.id;
 
-      const updatedAt = getNow();
-      const previousIds = [].concat(self.previousIds, [self.id]);
+      Transaction.create().run(
+        tfComment.toTransaction({
+          id,
+          text,
 
-      // return Transaction.create().run(
-      //   JSON.stringify({
-      //     id: self.id,
-      //     text,
-      //     previousIds,
-      //     updatedAt,
-      //     createdAt: self.createdAt
-      //   }),
-      //   {
-      //     type: "comment",
-      //     post: self.postId,
-      //     id: self.id,
-      //     createdAt: self.createdAt,
-      //     updatedAt: updatedAt
-      //   }
-      // );
+          createdAt: now,
+          post: self.id,
+          editOf: editOf,
+          replyOf: undefined
+        })
+      );
+    }),
+
+    reply: flow(function* reply(text: string) {
+      const id = randomId();
+      const now = getNow();
+
+      Transaction.create().run(
+        tfComment.toTransaction({
+          id,
+          text,
+
+          createdAt: now,
+          post: self.post,
+          editOf: undefined,
+          replyOf: self.id
+        })
+      );
     })
   }));
 

@@ -16,7 +16,7 @@ const App = types
     },
 
     get pathData(): {
-      page?: "Home" | "User";
+      page?: "Home" | "User" | "CreateCategory";
       categoryId?: string;
       postId?: string;
       userId?: string;
@@ -39,6 +39,10 @@ const App = types
         return {
           page: "User",
           userId: id1
+        };
+      } else if (type === "n" && id1 === "category") {
+        return {
+          page: "CreateCategory"
         };
       }
 

@@ -4,12 +4,13 @@ import * as utils from "./utils";
 import { IToTransaction, IFromTransaction } from "./types";
 
 type ModelInstance = Instance<typeof Post>;
-type Keys = "id" | "title" | "text" | "createdAt" | "updatedAt" | "category";
+type Keys = "id" | "title" | "text" | "createdAt" | "category" | "editOf";
 type Tags = {
   id: string;
   title: string;
   type: "post";
   category: string;
+  editOf: string;
 };
 type Content = "text";
 
@@ -24,11 +25,11 @@ export const toTransaction: IToTransaction<
       id: ops.id,
       title: ops.title,
       ...utils.fromMsToCreatedAtTags(ops.createdAt),
-      ...utils.fromMsToUpdatedAtTags(ops.updatedAt),
       ...utils.requiredTags(),
       "Content-Type": "text/plain",
       type: "post",
-      category: ops.category
+      category: ops.category,
+      editOf: ops.editOf
     },
     content: ops.text
   };
@@ -46,7 +47,7 @@ export const fromTransaction: IFromTransaction<
     text: ops.content,
     from: ops.tags.from,
     category: ops.tags.category,
-    createdAt: utils.toMsFromCreatedAtTags(ops.tags),
-    updatedAt: utils.toMsFromUpdatedAtTags(ops.tags)
+    editOf: ops.tags.editOf,
+    createdAt: utils.toMsFromCreatedAtTags(ops.tags)
   };
 };

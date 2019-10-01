@@ -21,7 +21,7 @@ export default observer(() => {
   const post = $post.get();
   if (!post) return <h1>loading</h1>;
 
-  const comments = Array.from(post.comments.values());
+  const comments: any = Array.from(post.comments.values());
 
   return (
     <>

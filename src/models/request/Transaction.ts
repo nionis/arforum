@@ -14,7 +14,7 @@ import { forEach } from "lodash";
 import Request from "src/models/request/Request";
 import account from "src/stores/account";
 import arweave from "src/arweave";
-import { wait, ITags, ITransactionObject } from "src/utils";
+import { wait, ITags, ITransactionResult } from "src/utils";
 
 const goodStatusCodes = [200, 202, 208];
 
@@ -25,7 +25,7 @@ const Transaction = types
     types.model({})
   )
   .actions(self => ({
-    run: <T extends ITags>(ops: ITransactionObject<T>) => {
+    run: <T extends ITags>(ops: ITransactionResult<T, any>) => {
       return self.track(async () => {
         let response;
         let transaction: TransactionType | undefined;

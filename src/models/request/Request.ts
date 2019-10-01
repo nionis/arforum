@@ -3,10 +3,11 @@
   Used when fetching data or making a transaction.
 */
 import { types } from "mobx-state-tree";
-import { flow } from "src/utils";
+import { id, flow } from "src/utils";
 
 const Request = types
   .model("Request", {
+    id,
     status: types.maybe(types.enumeration(["PENDING", "SUCCESS", "FAILURE"]))
   })
   .volatile(() => ({

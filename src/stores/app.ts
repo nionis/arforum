@@ -19,6 +19,9 @@ export const goto = {
   },
   user: (userId: string) => {
     Router.push(`/#/u/${userId}`);
+  },
+  createCategory: () => {
+    Router.push(`/#/n/category`);
   }
 };
 

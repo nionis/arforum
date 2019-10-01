@@ -26,17 +26,15 @@ const User = observer(() => {
         <div className="padder">
           <Item>Hey {user.username || user.address}!</Item>
           <Item textColor={colors.mutedText}>address: {user.address}</Item>
-          {user.username ? (
-            <div className="setupUsername">
-              <Item>Setup username using&nbsp;</Item>
-              <Link
-                href="https://arweave.net/fGUdNmXFmflBMGI2f9vD7KzsrAc1s1USQgQLgAVT0W0"
-                target="_blank"
-              >
-                arweaveID
-              </Link>
-            </div>
-          ) : null}
+          <div className="setupUsername">
+            <Item>Setup username using&nbsp;</Item>
+            <Link
+              href="https://arweave.net/fGUdNmXFmflBMGI2f9vD7KzsrAc1s1USQgQLgAVT0W0"
+              target="_blank"
+            >
+              arweaveID
+            </Link>
+          </div>
         </div>
       </div>
 

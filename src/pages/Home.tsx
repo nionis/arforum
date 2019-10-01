@@ -38,7 +38,7 @@ export default observer(() => {
         <div className="padder">
           <div className="postsContainer">
             {posts.map(post => {
-              return <Post key={post.id} store={post} />;
+              return <Post key={post.id} store={post} showDescription={true} />;
             })}
           </div>
           <div className="categoriesContainer">

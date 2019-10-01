@@ -3,24 +3,41 @@
 */
 import { types, flow } from "mobx-state-tree";
 import TransactionModel from "src/models/request/Transaction";
-import { randomId, Reference, ITransactionObject } from "src/utils";
+import cache from "src/stores/cache";
+import { randomId, Reference, ITransactionResult } from "src/utils";
 
 const Transactions = types
   .model("Transactions", {
     store: types.map(Reference(TransactionModel))
   })
   .actions(self => ({
-    add: flow(function* flow(ops: ITransactionObject<any>) {
-      const id = randomId();
-
-      self.store.set(id, TransactionModel.create());
-
-      return self.store.get(id).run(ops);
-    }),
-
     remove(id: string) {
       self.store.delete(id);
+      cache.delete(id);
     }
+  }))
+  .actions(self => ({
+    add: flow(function* flow(ops: ITransactionResult<any, any>) {
+      const id = randomId();
+
+      self.store.set(
+        id,
+        TransactionModel.create({
+          id
+        })
+      );
+
+      return self.store
+        .get(id)
+        .run(ops)
+        .then(res => {
+          setTimeout(() => {
+            self.remove(id);
+          }, 10e3);
+
+          return res;
+        });
+    })
   }))
   .actions(self => ({
     clear() {

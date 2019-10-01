@@ -1,6 +1,6 @@
 import { types, flow, Instance } from "mobx-state-tree";
 import Primitive from "src/models/Primitive";
-import Fetch from "src/models/request/Fetch";
+import fetches from "src/stores/fetches";
 import Transaction from "src/models/request/Transaction";
 import User from "src/models/User";
 import Vote from "src/models/Vote";
@@ -52,7 +52,7 @@ const Votes = types
   }))
   .actions(self => ({
     getVotes: flow(function* getVotes() {
-      const votesRaw: any[] = yield Fetch.create().run({
+      const votesRaw: any[] = yield fetches.add({
         query: `
           query Votes {
             transactions(
@@ -103,7 +103,6 @@ const Votes = types
           id,
           type,
           item: self.id,
-          updatedAt: now,
           createdAt: now
         })
       );

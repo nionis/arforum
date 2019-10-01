@@ -1,13 +1,18 @@
 import { types, flow } from "mobx-state-tree";
 import Primitive from "src/models/Primitive";
-import Fetch from "src/models/request/Fetch";
+import fetches from "src/stores/fetches";
 import HasOwner from "src/models/HasOwner";
 import User from "src/models/User";
 import Votes from "src/models/Votes";
-import History from "src/models/History";
+import Editable from "src/models/Editable";
 import Comment from "src/models/Comment";
 import Transaction from "src/models/request/Transaction";
-import { randomId, getNow, comment as tfComment, comment } from "src/utils";
+import {
+  randomId,
+  getNow,
+  comment as tfComment,
+  post as tfPost
+} from "src/utils";
 import { appId } from "src/env";
 
 const Post = types
@@ -16,7 +21,7 @@ const Post = types
     Primitive,
     HasOwner,
     Votes,
-    History,
+    Editable,
     types.model({
       category: types.string,
       title: "",
@@ -26,30 +31,24 @@ const Post = types
   )
   .actions(self => ({
     updateText: flow(function* updateText(text: string) {
-      const updatedAt = getNow();
-      const previousIds = [].concat(self.previousIds, [self.id]);
+      const id = randomId();
+      const now = getNow();
+      const editOf = self.id;
 
-      // return Transaction.create().run(
-      //   {
-      //     id: self.id,
-      //     title: self.title,
-      //     text,
-      //     previousIds,
-      //     updatedAt,
-      //     createdAt: self.createdAt
-      //   },
-      //   {
-      //     type: "post",
-      //     category: self.categoryId,
-      //     id: self.id,
-      //     createdAt: self.createdAt,
-      //     updatedAt: updatedAt
-      //   }
-      // );
+      Transaction.create().run(
+        tfPost.toTransaction({
+          id,
+          title: self.title,
+          text,
+          editOf,
+          createdAt: now,
+          category: self.category
+        })
+      );
     }),
 
     getComments: flow(function* getComments() {
-      const commentsRaw: any[] = yield Fetch.create().run({
+      const commentsRaw: any[] = yield fetches.add({
         query: `
           query Comments {
             transactions(
@@ -76,19 +75,13 @@ const Post = types
 
       comments.forEach(comment => {
         try {
-          if (self.comments.has(comment.id)) {
-            const _comment = self.comments.get(comment.id);
-
-            if (_comment.updatedAt > comment.updatedAt) return;
-          } else {
-            self.comments.set(
-              comment.id,
-              Comment.create({
-                ...comment,
-                from: User.create({ id: comment.from }) as any
-              })
-            );
-          }
+          self.comments.set(
+            comment.id,
+            Comment.create({
+              ...comment,
+              from: User.create({ id: comment.from }) as any
+            })
+          );
         } catch (err) {
           console.error(err);
         }
@@ -103,9 +96,10 @@ const Post = types
         tfComment.toTransaction({
           id,
           text,
-          updatedAt: now,
           createdAt: now,
-          post: self.id
+          post: self.id,
+          editOf: undefined,
+          replyOf: undefined
         })
       );
     })

@@ -1,9 +1,9 @@
 import { types, flow } from "mobx-state-tree";
 import Primitive from "src/models/Primitive";
-import Fetch from "src/models/request/Fetch";
 import HasOwner from "src/models/HasOwner";
 import User from "src/models/User";
 import Post from "src/models/Post";
+import fetches from "src/stores/fetches";
 import Transaction from "src/models/request/Transaction";
 import { randomId, getNow, Reference, post as tfPost } from "src/utils";
 import { appId } from "src/env";
@@ -25,7 +25,7 @@ const Category = types
   }))
   .actions(self => ({
     getPosts: flow(function* getPosts() {
-      const postsRaw: any[] = yield Fetch.create().run({
+      const postsRaw: any[] = yield fetches.add({
         query: `
           query Posts {
             transactions(
@@ -52,19 +52,13 @@ const Category = types
 
       posts.forEach(post => {
         try {
-          if (self.posts.has(post.id)) {
-            const _post = self.posts.get(post.id);
-
-            if (_post.updatedAt > post.updatedAt) return;
-          } else {
-            self.posts.set(
-              post.id,
-              Post.create({
-                ...post,
-                from: User.create({ id: post.from }) as any
-              })
-            );
-          }
+          self.posts.set(
+            post.id,
+            Post.create({
+              ...post,
+              from: User.create({ id: post.from }) as any
+            })
+          );
         } catch (err) {
           console.error(err);
         }
@@ -81,8 +75,8 @@ const Category = types
           title,
           text,
           createdAt: now,
-          updatedAt: now,
-          category: self.id
+          category: self.id,
+          editOf: undefined
         })
       );
     })

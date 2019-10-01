@@ -4,7 +4,7 @@ import * as utils from "./utils";
 import { IToTransaction, IFromTransaction } from "./types";
 
 type ModelInstance = Instance<typeof Vote>;
-type Keys = "id" | "type" | "item" | "createdAt" | "updatedAt";
+type Keys = "id" | "type" | "item" | "createdAt";
 type Tags = {
   id: string;
   type: "vote";
@@ -22,7 +22,7 @@ export const toTransaction: IToTransaction<
     tags: {
       id: ops.id,
       ...utils.fromMsToCreatedAtTags(ops.createdAt),
-      ...utils.fromMsToUpdatedAtTags(ops.updatedAt),
+
       ...utils.requiredTags(),
       "Content-Type": "text/plain",
       type: "vote",
@@ -43,7 +43,6 @@ export const fromTransaction: IFromTransaction<
     type: ops.content,
     from: ops.tags.from,
     item: ops.tags.item,
-    createdAt: utils.toMsFromCreatedAtTags(ops.tags),
-    updatedAt: utils.toMsFromUpdatedAtTags(ops.tags)
+    createdAt: utils.toMsFromCreatedAtTags(ops.tags)
   };
 };

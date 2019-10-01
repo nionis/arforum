@@ -1,13 +1,10 @@
 import { observer } from "mobx-react";
-import Modal from "@material-ui/core/Modal";
 import Border from "src/components/Border";
 import Item from "src/components/Item";
+import Button from "src/components/Button";
 import Tabs from "src/components/Tabs";
-import ModalModel from "src/models/Modal";
 import app, { goto } from "src/stores/app";
 import forum from "src/stores/forum";
-
-const store = ModalModel.create();
 
 const Categories = observer(() => {
   const categories = Array.from(forum.categories.values());
@@ -15,47 +12,43 @@ const Categories = observer(() => {
 
   return (
     <>
-      {/* <Modal
-        open={store.opened}
-        onClose={store.close}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}
-      >
-        <Login onClose={store.close} />
-      </Modal> */}
-
       <div className="container">
-        <Tabs direction="column">
-          <div className="item">
-            <Item onClick={() => forum.createCategory(String(Math.random()))}>
-              Create Category
-            </Item>
-          </div>
-          <div className="item">
-            <Item textColor={colors.mutedText}>Categories</Item>
-          </div>
+        <div className="createCategory">
+          <Button
+            onClick={goto.createCategory}
+            style={{ width: "100%", padding: "10px", height: "50px" }}
+          >
+            Create Category
+          </Button>
+        </div>
+        <Border width="1px">
+          <div className="categories">
+            <Tabs direction="column">
+              <Item textColor={colors.mutedText} style={{ padding: "10px" }}>
+                Categories
+              </Item>
 
-          {categories.map(category => {
-            const isActive: boolean = app.pathData.categoryId === category.id;
+              {categories.map(category => {
+                const isActive: boolean =
+                  app.pathData.categoryId === category.id;
 
-            return (
-              <Border
-                left={isActive}
-                disabled={!isActive}
-                color={colors.accent}
-                width="2px"
-                style={{ padding: "10px" }}
-              >
-                <Item onClick={() => goto.category(category.id)}>
-                  {category.name}
-                </Item>
-              </Border>
-            );
-          })}
-        </Tabs>
+                return (
+                  <Border
+                    left={isActive}
+                    disabled={!isActive}
+                    color={colors.accent}
+                    width="2px"
+                    style={{ padding: "10px" }}
+                  >
+                    <Item onClick={() => goto.category(category.id)}>
+                      {category.name}
+                    </Item>
+                  </Border>
+                );
+              })}
+            </Tabs>
+          </div>
+        </Border>
       </div>
 
       <style jsx>{`
@@ -63,12 +56,15 @@ const Categories = observer(() => {
           display: flex;
           text-align: center;
           flex-direction: column;
-          background-color: ${colors.foreground};
-          border: 1px solid ${colors.border};
         }
 
-        .item {
-          padding: 10px;
+        .createCategory {
+          margin-bottom: 10px;
+        }
+
+        .categories {
+          background-color: ${colors.foreground};
+          border: 1px solid ${colors.border};
         }
 
         .active {

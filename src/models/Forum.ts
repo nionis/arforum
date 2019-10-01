@@ -1,16 +1,10 @@
 import { types, flow } from "mobx-state-tree";
 import Transaction from "src/models/request/Transaction";
-import Fetch from "src/models/request/Fetch";
 import Category from "src/models/Category";
-import {
-  id,
-  getNow,
-  Reference,
-  category as tfCategory,
-  category
-} from "src/utils";
+import User from "src/models/User";
+import fetches from "src/stores/fetches";
+import { id, getNow, Reference, category as tfCategory } from "src/utils";
 import { appId, environment } from "src/env";
-import User from "./User";
 
 const Forum = types
   .model({
@@ -19,15 +13,22 @@ const Forum = types
   })
   .actions(self => ({
     getCategories: flow(function* getCategories({
-      categoryId
+      categoryId,
+      month
     }: {
       categoryId?: string;
+      month?: number;
     }) {
       const singleCategoryQuery = categoryId
         ? `{ name: "id", value: "${categoryId}" }`
         : "";
 
-      const categoriesRaw: any[] = yield Fetch.create().run({
+      const specificMonth =
+        typeof month !== "undefined"
+          ? `{ name: "months", value: "${month}" }`
+          : "";
+
+      const categoriesRaw: any[] = yield fetches.add({
         query: `
           query Categories {
             transactions(
@@ -36,6 +37,7 @@ const Forum = types
                 { name: "environment", value: "${environment}" }
                 { name: "type", value: "category" }
                 ${singleCategoryQuery}
+                ${specificMonth}
               ]
             ) {
               id
@@ -82,7 +84,6 @@ const Forum = types
         tfCategory.toTransaction({
           id,
           description: "",
-          updatedAt: now,
           createdAt: now
         })
       );

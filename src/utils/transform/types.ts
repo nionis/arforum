@@ -1,24 +1,14 @@
 import { ModelInstanceType } from "mobx-state-tree";
+import { IParsedTimestamp } from "src/utils";
 
 export interface ICreatedAtTags {
-  c_year: number;
-  c_month: number;
-  c_date: number;
-  c_hours: number;
-  c_minutes: number;
-  c_seconds: number;
+  year: number;
+  month: number;
+  date: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
 }
-
-export interface IUpdatedAtTags {
-  u_year: number;
-  u_month: number;
-  u_date: number;
-  u_hours: number;
-  u_minutes: number;
-  u_seconds: number;
-}
-
-export type ITimestampTags = ICreatedAtTags & IUpdatedAtTags;
 
 export type IRequiredTags = {
   "Content-Type": "application/json" | any;
@@ -56,7 +46,7 @@ export type IToTransaction<
   C extends keyof M
 > = (
   ops: IToTransactionOps<M, K>
-) => ITransactionResult<T & IRequiredTags & ITimestampTags, M[C]>;
+) => ITransactionResult<T & IRequiredTags & IParsedTimestamp, M[C]>;
 
 export type IFromTransactionOps<
   M extends ModelInstanceType<any, any>,
