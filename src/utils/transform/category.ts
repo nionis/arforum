@@ -1,62 +1,48 @@
 import { Instance } from "mobx-state-tree";
 import Category from "src/models/Category";
-import * as timestamp from "./utils";
-import {
-  ITimestampTags,
-  IToTransaction,
-  IFromTransaction,
-  IRequiredTags
-} from "./types";
-import { appId, environment, version } from "src/env";
+import * as utils from "./utils";
+import { IToTransaction, IFromTransaction } from "./types";
 
-type Model = Instance<typeof Category>;
-
-type IToTransactionInputs = Pick<
-  Model,
-  "id" | "description" | "createdAt" | "updatedAt"
->;
-
-type IToTransactionOutput = Pick<Model, "id" | "description"> & {
+type ModelInstance = Instance<typeof Category>;
+type Keys = "id" | "description" | "createdAt" | "updatedAt";
+type Tags = {
+  id: string;
+  description: string;
   type: "category";
-} & ITimestampTags &
-  IRequiredTags;
+};
+type Content = undefined;
 
 export const toTransaction: IToTransaction<
-  IToTransactionInputs,
-  IToTransactionOutput
-> = o => {
+  ModelInstance,
+  Keys,
+  Tags,
+  Content
+> = ops => {
   return {
     tags: {
-      id: o.id,
-      description: o.description,
-      ...timestamp.fromMsToCreatedAtTags(o.createdAt),
-      ...timestamp.fromMsToUpdatedAtTags(o.updatedAt),
+      id: ops.id,
+      description: ops.description,
+      ...utils.fromMsToCreatedAtTags(ops.createdAt),
+      ...utils.fromMsToUpdatedAtTags(ops.updatedAt),
+      ...utils.requiredTags(),
       "Content-Type": "text/plain",
-      appId,
-      environment,
-      version,
       type: "category"
-    }
+    },
+    content: undefined
   };
 };
 
-type IFromTransactionInput = IToTransactionOutput & {
-  from: string;
-};
-
-type IFromTransactionOutput = IToTransactionInputs & {
-  from: string;
-};
-
 export const fromTransaction: IFromTransaction<
-  IFromTransactionInput,
-  IFromTransactionOutput
-> = o => {
+  ModelInstance,
+  Keys,
+  Tags,
+  Content
+> = ops => {
   return {
-    id: o.tags.id,
-    description: o.tags.description,
-    from: o.tags.from,
-    createdAt: timestamp.toMsFromCreatedAtTags(o.tags),
-    updatedAt: timestamp.toMsFromUpdatedAtTags(o.tags)
+    id: ops.tags.id,
+    description: ops.tags.description,
+    from: ops.tags.from,
+    createdAt: utils.toMsFromCreatedAtTags(ops.tags),
+    updatedAt: utils.toMsFromUpdatedAtTags(ops.tags)
   };
 };

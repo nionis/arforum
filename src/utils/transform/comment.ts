@@ -1,65 +1,49 @@
 import { Instance } from "mobx-state-tree";
 import Comment from "src/models/Comment";
-import * as timestamp from "./utils";
-import {
-  ITimestampTags,
-  IToTransaction,
-  IFromTransaction,
-  IRequiredTags
-} from "./types";
-import { appId, environment, version } from "src/env";
+import * as utils from "./utils";
+import { IToTransaction, IFromTransaction } from "./types";
 
-type Model = Instance<typeof Comment>;
-
-type IToTransactionInputs = Pick<
-  Model,
-  "id" | "text" | "createdAt" | "updatedAt" | "post"
->;
-
-type IToTransactionOutput = Pick<Model, "id"> & {
+type ModelInstance = Instance<typeof Comment>;
+type Keys = "id" | "text" | "createdAt" | "updatedAt" | "post";
+type Tags = {
+  id: string;
   type: "comment";
   post: string;
-} & ITimestampTags &
-  IRequiredTags;
+};
+type Content = "text";
 
 export const toTransaction: IToTransaction<
-  IToTransactionInputs,
-  IToTransactionOutput
-> = o => {
+  ModelInstance,
+  Keys,
+  Tags,
+  Content
+> = ops => {
   return {
     tags: {
-      id: o.id,
-      ...timestamp.fromMsToCreatedAtTags(o.createdAt),
-      ...timestamp.fromMsToUpdatedAtTags(o.updatedAt),
+      id: ops.id,
+      ...utils.fromMsToCreatedAtTags(ops.createdAt),
+      ...utils.fromMsToUpdatedAtTags(ops.updatedAt),
+      ...utils.requiredTags(),
       "Content-Type": "text/plain",
-      appId,
-      environment,
-      version,
       type: "comment",
-      post: o.post
+      post: ops.post
     },
-    content: o.text
+    content: ops.text
   };
 };
 
-type IFromTransactionInput = IToTransactionOutput & {
-  from: string;
-};
-
-type IFromTransactionOutput = IToTransactionInputs & {
-  from: string;
-};
-
 export const fromTransaction: IFromTransaction<
-  IFromTransactionInput,
-  IFromTransactionOutput
-> = o => {
+  ModelInstance,
+  Keys,
+  Tags,
+  Content
+> = ops => {
   return {
-    id: o.tags.id,
-    text: o.content,
-    from: o.tags.from,
-    post: o.tags.post,
-    createdAt: timestamp.toMsFromCreatedAtTags(o.tags),
-    updatedAt: timestamp.toMsFromUpdatedAtTags(o.tags)
+    id: ops.tags.id,
+    text: ops.content,
+    from: ops.tags.from,
+    post: ops.tags.post,
+    createdAt: utils.toMsFromCreatedAtTags(ops.tags),
+    updatedAt: utils.toMsFromUpdatedAtTags(ops.tags)
   };
 };

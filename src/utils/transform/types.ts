@@ -1,11 +1,4 @@
-export interface IParsedTimestamp {
-  year: number;
-  month: number;
-  date: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-}
+import { ModelInstanceType } from "mobx-state-tree";
 
 export interface ICreatedAtTags {
   c_year: number;
@@ -34,16 +27,51 @@ export type IRequiredTags = {
   version: string;
 };
 
-export type ITags = {
-  [key: string]: any;
+export type ITag<T = any> = T;
+
+// tags type
+export type ITags<T = any> = {
+  [key: string]: ITag<T>;
 };
 
-export type ITransactionObject<T extends ITags> = { tags: T; content?: any };
+// content type
+export type IContent<T = any> = T;
 
-export type IToTransaction<I, T extends ITags> = (
-  ops: I
-) => ITransactionObject<T>;
+// transaction result when fetching
+export type ITransactionResult<T, C> = {
+  // id: string;
+  tags: T;
+  content?: IContent<C>;
+};
 
-export type IFromTransaction<T extends ITags, O> = (
-  ops: ITransactionObject<T>
-) => O;
+export type IToTransactionOps<
+  M extends ModelInstanceType<any, any>,
+  K extends keyof M
+> = Pick<M, K>;
+
+export type IToTransaction<
+  M extends ModelInstanceType<any, any>,
+  K extends keyof M,
+  T,
+  C extends keyof M
+> = (
+  ops: IToTransactionOps<M, K>
+) => ITransactionResult<T & IRequiredTags & ITimestampTags, M[C]>;
+
+export type IFromTransactionOps<
+  M extends ModelInstanceType<any, any>,
+  K extends keyof M,
+  T,
+  C extends keyof M
+> = ReturnType<IToTransaction<M, K, T & { from: string }, C>>;
+
+export type IFromTransaction<
+  M extends ModelInstanceType<any, any>,
+  K extends keyof M,
+  T,
+  C extends keyof M
+> = (
+  ops: IFromTransactionOps<M, K, T, C>
+) => IToTransactionOps<M, K> & {
+  from: string;
+};

@@ -1,54 +1,17 @@
-import { IParsedTimestamp, ICreatedAtTags, IUpdatedAtTags } from "./types";
-
-export const fromMs = (ms: number): IParsedTimestamp => {
-  const date = new Date(ms);
-
-  return {
-    year: date.getUTCFullYear(),
-    month: date.getUTCMonth(),
-    date: date.getUTCDate(),
-    hours: date.getUTCHours(),
-    minutes: date.getUTCMinutes(),
-    seconds: date.getUTCSeconds()
-  };
-};
-
-export const toMs = (data: IParsedTimestamp): number => {
-  const date = new Date();
-
-  date.setUTCFullYear(data.year);
-  date.setUTCMonth(data.month);
-  date.setUTCDate(data.date);
-  date.setUTCHours(data.hours);
-  date.setUTCMinutes(data.minutes);
-  date.setUTCSeconds(data.seconds);
-
-  return date.valueOf();
-};
+import { fromMs, toMs } from "src/utils/timestamp";
+import { ICreatedAtTags, IUpdatedAtTags } from "./types";
+import { appId, environment, version } from "src/env";
 
 export const fromMsToCreatedAtTags = (ms: number): ICreatedAtTags => {
-  const parsedCreatedAt = fromMs(ms);
+  const parsed = fromMs(ms);
 
   return {
-    c_year: parsedCreatedAt.year,
-    c_month: parsedCreatedAt.month,
-    c_date: parsedCreatedAt.date,
-    c_hours: parsedCreatedAt.hours,
-    c_minutes: parsedCreatedAt.minutes,
-    c_seconds: parsedCreatedAt.seconds
-  };
-};
-
-export const fromMsToUpdatedAtTags = (ms: number): IUpdatedAtTags => {
-  const parsedUpdatedAt = fromMs(ms);
-
-  return {
-    u_year: parsedUpdatedAt.year,
-    u_month: parsedUpdatedAt.month,
-    u_date: parsedUpdatedAt.date,
-    u_hours: parsedUpdatedAt.hours,
-    u_minutes: parsedUpdatedAt.minutes,
-    u_seconds: parsedUpdatedAt.seconds
+    c_year: parsed.year,
+    c_month: parsed.month,
+    c_date: parsed.date,
+    c_hours: parsed.hours,
+    c_minutes: parsed.minutes,
+    c_seconds: parsed.seconds
   };
 };
 
@@ -73,3 +36,22 @@ export const toMsFromUpdatedAtTags = (tags: IUpdatedAtTags): number => {
     seconds: tags.u_seconds
   });
 };
+
+export const fromMsToUpdatedAtTags = (ms: number): IUpdatedAtTags => {
+  const parsed = fromMs(ms);
+
+  return {
+    u_year: parsed.year,
+    u_month: parsed.month,
+    u_date: parsed.date,
+    u_hours: parsed.hours,
+    u_minutes: parsed.minutes,
+    u_seconds: parsed.seconds
+  };
+};
+
+export const requiredTags = () => ({
+  appId,
+  environment,
+  version
+});
