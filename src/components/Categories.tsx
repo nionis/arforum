@@ -9,18 +9,27 @@ import forum from "src/stores/forum";
 const Categories = observer(() => {
   const categories = Array.from(forum.categories.values());
   const { colors } = app;
+  const { categoryId } = app.pathData;
 
   return (
     <>
       <div className="container">
         <div className="createCategory">
-          <Button
-            onClick={() => forum.createCategory("puppies")}
-            // onClick={goto.createCategory}
-            style={{ width: "100%", padding: "10px", height: "50px" }}
-          >
-            Create Category
-          </Button>
+          {!categoryId ? (
+            <Button
+              onClick={goto.createCategory}
+              style={{ width: "100%", padding: "10px", height: "50px" }}
+            >
+              Create Category
+            </Button>
+          ) : (
+            <Button
+              onClick={goto.createPost}
+              style={{ width: "100%", padding: "10px", height: "50px" }}
+            >
+              Create Post
+            </Button>
+          )}
         </div>
         <Border width="1px">
           <div className="categories">
@@ -41,12 +50,7 @@ const Categories = observer(() => {
                     width="2px"
                     style={{ padding: "10px" }}
                   >
-                    <Item
-                      onClick={() =>
-                        category.createPost("hello world", "bye world")
-                      }
-                    >
-                      {/* <Item onClick={() => goto.category(category.id)}> */}
+                    <Item onClick={() => goto.category(category.id)}>
                       {category.name}
                     </Item>
                   </Border>

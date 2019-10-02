@@ -22,6 +22,9 @@ export const goto = {
   },
   createCategory: () => {
     Router.push(`/#/n/category`);
+  },
+  createPost: () => {
+    Router.push(`/#/n/post`);
   }
 };
 

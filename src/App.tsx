@@ -5,6 +5,7 @@ import Home from "src/pages/Home";
 import Post from "src/pages/Post";
 import User from "src/pages/User";
 import CreateCategory from "src/pages/CreateCategory";
+import CreatePost from "src/pages/CreatePost";
 import NotFound from "src/pages/NotFound";
 import app from "src/stores/app";
 
@@ -20,6 +21,8 @@ const View = observer(() => {
     return <User />;
   } else if (page === "CreateCategory") {
     return <CreateCategory />;
+  } else if (page === "CreatePost") {
+    return <CreatePost />;
   }
 
   return <NotFound />;

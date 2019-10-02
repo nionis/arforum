@@ -126,13 +126,16 @@ const Forum = types
       });
     }),
 
-    createCategory: flow(function* createCategory(name: string) {
+    createCategory: flow(function* createCategory(
+      name: string,
+      description: string
+    ) {
       const now = getNow();
 
       transactions.add(
         tfCategory.toTransaction({
           name,
-          description: "",
+          description,
           createdAt: now
         })
       );

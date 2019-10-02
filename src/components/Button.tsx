@@ -5,15 +5,20 @@ import app from "src/stores/app";
 interface IButton {
   children: any;
   onClick?: () => any;
+  disabled?: boolean;
   style?: CSSProperties;
 }
 
-const Button = ({ children, onClick, style }: IButton) => {
+const Button = ({ children, onClick, disabled, style }: IButton) => {
   const { colors } = app;
 
   return (
     <>
-      <Item textColor="white" accentColor="white" onClick={onClick}>
+      <Item
+        textColor="white"
+        accentColor="white"
+        onClick={disabled ? undefined : onClick}
+      >
         <div style={style}>{children}</div>
       </Item>
 
@@ -28,6 +33,8 @@ const Button = ({ children, onClick, style }: IButton) => {
           width: 100px;
           border-radius: 4px;
           background-color: ${colors.accent};
+          opacity: ${disabled ? "0.9" : "1"};
+          cursor: ${disabled ? "not-allowed" : "pointer"};
         }
 
         div:hover {
