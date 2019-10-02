@@ -1,24 +1,50 @@
 import { types, flow, Instance } from "mobx-state-tree";
 import Primitive from "src/models/Primitive";
 import fetches from "src/stores/fetches";
-import Transaction from "src/models/request/Transaction";
+import transaction from "src/stores/transactions";
 import User from "src/models/User";
+import Request from "src/models/request/Request";
 import Vote from "src/models/Vote";
 import account from "src/stores/account";
 import { getNow, pickLatest, vote as tfVote } from "src/utils";
 import { appId } from "src/env";
+import arweave from "src/arweave";
 
 const Votes = types
   .compose(
     "Votes",
     Primitive,
     types.model("Votes", {
+      fVotes: types.optional(Request, {}),
       votes: types.map(Vote)
     })
   )
   .views(self => ({
     get results() {
-      const votes = Array.from(self.votes.values());
+      const allVotes = Array.from(self.votes.values());
+      const users = allVotes.reduce<{
+        [key: string]: Instance<typeof Vote>;
+      }>((result, vote) => {
+        // if user votes his own post it doesnt count
+        if (vote.from.address === account.address) {
+          return result;
+        }
+
+        // get latest vote of a user
+        if (result[vote.from.id]) {
+          const oldVote = result[vote.from.id];
+
+          if (oldVote.createdAt < vote.createdAt) {
+            result[vote.from.id] = vote;
+          }
+        } else {
+          result[vote.from.id] = vote;
+        }
+
+        return result;
+      }, {});
+
+      const votes = Object.values(users);
 
       return votes.reduce(
         (results, vote) => {
@@ -51,58 +77,32 @@ const Votes = types
     }
   }))
   .actions(self => ({
-    getVotes: flow(function* getVotes() {
-      const votesRaw: any[] = yield fetches.add({
-        query: `
-          query Votes {
-            transactions(
-              tags: [
-                { name: "appId", value: "${appId}" }
-                { name: "modelType", value: "vote" }
-                { name: "item", value: "${self.id}" }
-              ]
-            ) {
-              id
-              tags {
-                name
-                value
-              }
-            }
-          }
-        `,
-        getData: res => res.data.transactions,
-        fetchContent: true,
-        type: "text"
-      });
-
-      const votes = votesRaw.map(tfVote.fromTransaction);
-
-      votes.forEach(vote => {
-        if (self.votes.has(vote.id)) return;
-
-        try {
-          self.votes.set(
-            vote.id,
-            Vote.create({
-              ...vote,
-              from: User.create({ id: vote.from }) as any
-            })
-          );
-        } catch (err) {
-          console.error(err);
-        }
-      });
-    }),
-
-    vote: flow(function* vote(type: Instance<typeof Vote>["type"]) {
+    vote: flow(function* vote(
+      type: Instance<typeof Vote>["type"],
+      target: string
+    ) {
       const now = getNow();
 
-      return Transaction.create().run(
+      const ops =
+        type === "upvote"
+          ? {
+              target,
+              quantity: arweave.ar.arToWinston("0.10")
+            }
+          : {
+              reward: arweave.ar.arToWinston("0.10")
+            };
+
+      transaction.add(
         tfVote.toTransaction({
           type,
           item: self.id,
           createdAt: now
-        })
+        }),
+        {
+          title: type,
+          ...ops
+        }
       );
     })
   }));

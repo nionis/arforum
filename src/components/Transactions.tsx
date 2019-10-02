@@ -20,12 +20,12 @@ const Transactions = observer(() => {
           {txs.map(tx => (
             <div className="dropdownTab">
               {" "}
-              <div className="text">Upvote</div>
+              <div className="text">{tx.title || "Other"}</div>
               <div className="status">{tx.id}</div>
               <div className="status">{tx.status}</div>{" "}
             </div>
           ))}
-          {transactions.pendingSize === 0 ? (
+          {transactions.store.size === 0 ? (
             <Item textColor={colors.mutedText}>no transactions found</Item>
           ) : null}
         </div>
@@ -42,6 +42,7 @@ const Transactions = observer(() => {
           right: 0;
           min-height: 200px;
           box-shadow: 1px 1px 20px 0px ${colors.shadow};
+          z-index: 2;
         }
 
         .transactions {

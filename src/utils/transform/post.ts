@@ -7,7 +7,6 @@ import { IToTransaction, IFromTransaction } from "./types";
 type ModelInstance = Instance<typeof Post>;
 type Keys = "title" | "content" | "createdAt" | "category" | "editOf" | "type";
 type Tags = {
-  title: string;
   modelType: "post";
   category: string;
   editOf: string;
@@ -23,7 +22,6 @@ export const toTransaction: IToTransaction<
   return {
     id: undefined,
     tags: {
-      title: ops.title, // temporary: for faster loading
       ...fromMs(ops.createdAt),
       ...requiredTags(),
       "Content-Type": "text/plain",
@@ -47,7 +45,7 @@ export const fromTransaction: IFromTransaction<
 > = ops => {
   return {
     id: ops.id,
-    title: ops.tags.title,
+    title: ops.content.title,
     content: ops.content.content,
     from: ops.tags.from,
     category: ops.tags.category,

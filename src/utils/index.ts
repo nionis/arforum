@@ -20,10 +20,14 @@ export const wait = (ms: number) => {
   });
 };
 
+// run string to 7 chars
+export const toTiny = (str: string) => {
+  return `${str.substring(0, 4)}..`;
+};
+
 export * from "./colors";
 export * from "./transform";
 export * from "./cache";
-export * from "./graphql";
 export * from "./mst";
 export * from "./pagination";
 export * from "./pickLatest";

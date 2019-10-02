@@ -7,7 +7,7 @@ import { id, flow } from "src/utils";
 
 const Request = types
   .model("Request", {
-    id,
+    id: types.optional(id, String(Math.floor(Math.random() * 1e8))),
     status: types.maybe(types.enumeration(["PENDING", "SUCCESS", "FAILURE"]))
   })
   .volatile(() => ({

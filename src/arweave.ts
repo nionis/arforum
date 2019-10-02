@@ -10,18 +10,7 @@ const arweave = Arweave.init({
   host: "arweave.net",
   protocol: "https",
   port: 443,
-  timeout: 120e3
+  timeout: 60e3
 });
-
-export const graphql = (query: string, variables?: any) => {
-  return fetch("https://arweave.net/arql", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json"
-    },
-    body: JSON.stringify({ query, variables })
-  }).then(res => res.json());
-};
 
 export default arweave;

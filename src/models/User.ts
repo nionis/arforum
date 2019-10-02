@@ -2,7 +2,7 @@ import { when } from "mobx";
 import { types, flow } from "mobx-state-tree";
 import { maxBy } from "lodash";
 import fetches from "src/stores/fetches";
-import { id } from "src/utils";
+import { id, toTiny } from "src/utils";
 
 const User = types
   .model("User", {
@@ -15,52 +15,41 @@ const User = types
     }
   }))
   .views(self => ({
-    get tinyAddress() {
-      if (!self.address) return "";
-
-      return `${self.address.substring(0, 4)}..`;
-    }
-  }))
-  .views(self => ({
     get displayName() {
-      return self.username || self.tinyAddress || "not found";
+      return self.username || toTiny(self.address) || "not found";
     }
   }))
   .actions(self => ({
     getUsername: flow(function* getUsername() {
-      const items: any[] = yield fetches
-        .add({
-          query: `
-            query Names {
-              transactions(
-                tags: [
-                  { name: "App-Name", value: "arweave-id" }
-                  { name: "from", value: "${self.address}" }
-                  { name: "modelType", value: "name" }
-                ]
-              ) {
-                id
-                unixTime: tagValue(tagName: "Unix-Time")
-              }
+      const names: any[] = yield fetches.add({
+        query: {
+          op: "and",
+          expr1: {
+            op: "equals",
+            expr1: "App-Name",
+            expr2: "arweave-id"
+          },
+          expr2: {
+            op: "and",
+            expr1: {
+              op: "equals",
+              expr1: "Type",
+              expr2: "name"
+            },
+            expr2: {
+              op: "equals",
+              expr1: "from",
+              expr2: self.address
             }
-          `,
-          getData: res => res.data.transactions,
-          type: "text",
-          fetchContent: true
-        })
-        .then((items: any) => {
-          return (items || []).map(item => {
-            return {
-              name: item.content,
-              createdAt: Number(item.unixTime)
-            };
-          });
-        });
+          }
+        },
+        contentType: "text/plain"
+      });
 
-      const item = maxBy(items, o => o.createdAt);
+      const item = maxBy(names, o => Number(o.tags["Unix-Time"]));
 
       if (item) {
-        self.username = item.name;
+        self.username = item.content;
       }
     })
   }));

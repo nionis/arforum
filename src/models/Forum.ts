@@ -1,131 +1,135 @@
-import { types, flow } from "mobx-state-tree";
+import { types, flow, Instance } from "mobx-state-tree";
 import Category from "src/models/Category";
 import User from "src/models/User";
+import Request from "src/models/request/Request";
 import Post from "src/models/Post";
 import transactions from "src/stores/transactions";
+import seq from "promise-sequential";
 import fetches from "src/stores/fetches";
 import {
   id,
   getNow,
   Reference,
   category as tfCategory,
-  toMs,
-  queryApp,
-  timestamps
+  post as tfPost
 } from "src/utils";
+import { appId } from "src/env";
 
 const Forum = types
   .model({
     id,
+    fCategories: types.optional(Request, {}),
+    fPosts: types.optional(Request, {}),
     categories: types.map(Reference(Category))
   })
   .actions(self => ({
-    shallowFetch: flow(function* shallowFetch() {
-      const {
-        categories,
-        posts
-      }: {
-        categories: any[];
-        posts: any[];
-      } = yield fetches.add({
-        query: `
-          query Categories {
-            transactions(
-              tags: [
-                ${queryApp}
-                { name: "modelType", value: "category" }
-              ]
-            ) {
-              id
-              name: tagValue(tagName: "name")
-
-              posts: linkedFromTransactions(byForeignTag: "category", tags: [
-                ${queryApp}
-                { name: "modelType", value: "post" }
-              ]) {
-                id
-                from: tagValue(tagName: "from")
-                title: tagValue(tagName: "title")
-                ${timestamps}
-
-                commentsCount: countLinkedFromTransactions(byForeignTag: "post", tags: [
-                  ${queryApp}
-                  { name: "modelType", value: "comment" }
-                ])
-              }
+    setCategory(category: Instance<typeof Category>) {
+      self.categories.set(category.id, category);
+    }
+  }))
+  .actions(self => ({
+    quickFetch: async () => {
+      await self.fCategories.track(async () => {
+        const categories: any[] = (await fetches.add({
+          query: {
+            op: "and",
+            expr1: {
+              op: "equals",
+              expr1: "appId",
+              expr2: appId
+            },
+            expr2: {
+              op: "equals",
+              expr1: "modelType",
+              expr2: "category"
             }
+          },
+          contentType: "application/json"
+        })) as any;
+
+        categories.forEach(category => {
+          try {
+            if (!self.categories.has(category.id)) {
+              const normalized = tfCategory.fromTransaction(category);
+
+              self.setCategory(
+                Category.create({
+                  ...normalized,
+                  from: User.create({
+                    id: normalized.from
+                  }) as any
+                })
+              );
+            }
+          } catch (err) {
+            console.error(err);
           }
-        `,
-        getData: res => {
-          const data: any[] = res.data.transactions;
+        });
 
-          const categories = data.map(category => ({
-            id: category.id,
-            name: category.name
-          }));
+        return categories;
+      });
 
-          const posts = data.reduce((result, category) => {
-            result = result.concat(
-              category.posts.map(post => ({
-                category: category.id,
-                ...post
-              }))
-            );
+      await self.fPosts.track(async () => {
+        const posts: any[] = (await fetches.add({
+          query: {
+            op: "and",
+            expr1: {
+              op: "equals",
+              expr1: "appId",
+              expr2: appId
+            },
+            expr2: {
+              op: "equals",
+              expr1: "modelType",
+              expr2: "post"
+            }
+          },
+          contentType: "application/json"
+        })) as any;
 
-            return result;
-          }, []);
+        posts.forEach(post => {
+          try {
+            const normalized = tfPost.fromTransaction(post);
+            const category = self.categories.get(normalized.category);
 
-          return {
-            categories,
-            posts
-          };
+            if (!category.posts.has(normalized.id)) {
+              category.setPost(
+                Post.create({
+                  ...normalized,
+                  from: User.create({
+                    id: normalized.from
+                  }) as any
+                })
+              );
+            }
+
+            const store = category.posts.get(normalized.id);
+
+            store.setContent(normalized.content);
+            store.from.getUsername();
+          } catch (err) {
+            console.error(err);
+          }
+        });
+
+        return posts;
+      });
+    },
+
+    postFetch: async () => {
+      const posts = Array.from(self.categories.values()).reduce(
+        (result, category) => {
+          const posts = Array.from(category.posts.values());
+
+          result = result.concat(posts);
+
+          return result;
         },
-        fetchContent: false,
-        type: "json"
-      });
+        []
+      );
 
-      categories.forEach(category => {
-        try {
-          if (!self.categories.has(category.id)) {
-            self.categories.set(
-              category.id,
-              Category.create({
-                id: category.id,
-                name: category.name
-              })
-            );
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      });
-
-      posts.forEach(post => {
-        try {
-          const category = self.categories.get(post.category);
-
-          if (!category.posts.has(post.id)) {
-            const postStore = Post.create({
-              id: post.id,
-              title: post.title,
-              category: post.category,
-              commentsCountRemote: post.commentsCount,
-              type: post.type,
-              from: User.create({
-                id: post.from
-              }) as any,
-              createdAt: toMs(post)
-            });
-
-            category.setPost(postStore);
-
-            postStore.from.getUsername();
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      });
-    }),
+      return seq(posts.map(post => post.quickFetch));
+    },
 
     createCategory: flow(function* createCategory(
       name: string,
@@ -138,7 +142,10 @@ const Forum = types
           name,
           description,
           createdAt: now
-        })
+        }),
+        {
+          title: "category"
+        }
       );
     })
   }));

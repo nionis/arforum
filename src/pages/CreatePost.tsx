@@ -10,8 +10,12 @@ import Tabs from "src/components/Tabs";
 import Border from "src/components/Border";
 import Item from "src/components/Item";
 import Editor from "src/components/Editor";
-import app from "src/stores/app";
+import app, { goto } from "src/stores/app";
 import forum from "src/stores/forum";
+
+const emptyContentState = convertToRaw(
+  EditorState.createEmpty().getCurrentContent()
+);
 
 const store = types
   .model("CreatePost", {
@@ -22,7 +26,7 @@ const store = types
     showErrors: false
   })
   .volatile(self => ({
-    editorState: EditorState.createEmpty()
+    contentState: emptyContentState
   }))
   .views(self => ({
     get valid() {
@@ -54,7 +58,7 @@ const store = types
         self.panel = panel;
       },
 
-      updateInput(key: "title" | "url" | "editorState", value: any) {
+      updateInput(key: "title" | "url" | "contentState", value: any) {
         self.showErrors = true;
 
         self[key] = value;
@@ -66,14 +70,20 @@ const store = types
         const title = self.title;
         const content =
           self.panel === "text"
-            ? convertToRaw(self.editorState.getCurrentContent())
+            ? self.contentState
             : self.panel === "media"
             ? media
             : self.url;
 
-        forum.categories
-          .get("jfyToGEYY7YAda_gwR5mg6mKmoLp0S-I-N_u1Ha26hk")
-          .createPost(title, content, self.panel);
+        const categoryId = app.pathData.categoryId;
+
+        forum.categories.get(categoryId).createPost(title, content, self.panel);
+
+        self.title = "";
+        self.url = "";
+        media = undefined;
+        self.contentState = emptyContentState;
+        goto.home();
       }
     };
   })
@@ -155,8 +165,8 @@ const CreatePost = observer(() => {
 
             {store.panel === "text" ? (
               <Editor
-                state={store.editorState}
-                onChange={state => store.updateInput("editorState", state)}
+                state={store.contentState}
+                onChange={state => store.updateInput("contentState", state)}
               />
             ) : store.panel === "media" ? (
               <div className="dropzone" {...getRootProps()}>

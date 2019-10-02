@@ -18,6 +18,8 @@ const $post = computed(() => {
 });
 
 export default observer(() => {
+  const { categoryId, postId } = app.pathData;
+
   const post = $post.get();
   if (!post) return <h1>loading</h1>;
 
@@ -27,7 +29,7 @@ export default observer(() => {
     <>
       <div className="container">
         <div className="padder">
-          <Post store={post} />
+          <Post store={post} showEdit={!!postId} />
           <CreateComment post={post} />
           {comments.map(comment => {
             return <Comment store={comment} />;

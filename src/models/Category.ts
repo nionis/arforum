@@ -1,3 +1,4 @@
+import { toJS } from "mobx";
 import { types, flow, Instance } from "mobx-state-tree";
 import seq from "promise-sequential";
 import { mapValues } from "lodash";
@@ -8,7 +9,8 @@ import Post from "src/models/Post";
 import fetches from "src/stores/fetches";
 import transactions from "src/stores/transactions";
 import arweave from "src/arweave";
-import { getNow, Reference, post as tfPost } from "src/utils";
+import { getNow, Reference, post as tfPost, toTiny } from "src/utils";
+import { getBlobData, postBlobData, patchContent } from "src/utils/editor";
 import { appId } from "src/env";
 
 const Category = types
@@ -23,8 +25,25 @@ const Category = types
     })
   )
   .views(self => ({
-    displayName() {
-      return self.name || `${self.id.substring(0, 4)}..`;
+    get displayName() {
+      return self.name || toTiny(self.id);
+    },
+
+    get postsProcessed() {
+      const posts = Array.from(self.posts.values()).sort((a, b) => {
+        return a.createdAt - b.createdAt;
+      });
+
+      const processed = posts.reduce((result, post) => {
+        if (post.editOf && result.get(post.editOf)) {
+          result.delete(post.editOf);
+        }
+
+        result.set(post.id, post);
+        return result;
+      }, new Map());
+
+      return processed;
     }
   }))
   .actions(self => ({
@@ -34,128 +53,17 @@ const Category = types
       return self.posts.get(post.id);
     }
   }))
-
   .actions(self => ({
-    getPosts: flow(function* getPosts({
-      shallow,
-      month
-    }: {
-      shallow: boolean;
-      month?: number;
-    }) {
-      const specificMonth =
-        typeof month !== "undefined"
-          ? `{ name: "months", value: "${month}" }`
-          : "";
-
-      const postsRaw: any[] = yield fetches.add({
-        query: `
-          query Posts {
-            transactions(
-              tags: [
-                { name: "appId", value: "${appId}" }
-                { name: "modelType", value: "post" }
-                { name: "category", value: "${self.id}" }
-                ${specificMonth}
-              ]
-            ) {
-              id
-              tags {
-                name
-                value
-              }
-            }
-          }
-        `,
-        getData: res => res.data.transactions,
-        fetchContent: !shallow,
-        type: "text"
-      });
-
-      const posts = postsRaw.map(tfPost.fromTransaction);
-
-      posts.forEach(post => {
-        try {
-          self.posts.set(
-            post.id,
-            Post.create({
-              ...post,
-              from: User.create({ id: post.from }) as any
-            })
-          );
-        } catch (err) {
-          console.error(err);
-        }
-      });
-    }),
-
     createPost: flow(function* createPost(
       title: string,
       content: any,
       type: "text" | "media" | "link"
     ) {
       const now = getNow();
+      const blobData = getBlobData(content, type);
+      const blobIds: any[] = yield postBlobData(blobData);
 
-      const blobData: any[] =
-        type === "text"
-          ? Object.values(content.entityMap)
-              .filter((o: any) => {
-                return o.type === "IMAGE";
-              })
-              .map((o: any) => ({
-                url: o.data.src
-              }))
-          : type === "media"
-          ? [
-              {
-                url: URL.createObjectURL(content),
-                type: content.type
-              }
-            ]
-          : [];
-
-      const waitForTx = (props: any) => {
-        return new Promise(async (resolve, reject) => {
-          const content = await fetch(props.url)
-            .then(r => r.arrayBuffer())
-            .then(arr => new Uint8Array(arr));
-
-          transactions
-            .add(
-              {
-                tags: {
-                  "Content-Type": props.type || ""
-                },
-                content
-              },
-              id => resolve(id)
-            )
-            .catch(reject);
-        });
-      };
-
-      const blobIds: any[] = yield seq(
-        blobData.map(props => async () => {
-          return {
-            id: await waitForTx(props),
-            url: props.url
-          };
-        })
-      );
-
-      if (type === "media") {
-        content = blobIds[0].url;
-      } else if (type === "text") {
-        content.entityMap = mapValues(content.entityMap, item => {
-          console.log(item);
-          if (item.type !== "IMAGE") return item;
-
-          const id = blobIds.find(o => o.url === item.data.src).id;
-          item.data.src = `https://arweave.net/${id}`;
-
-          return item;
-        });
-      }
+      content = patchContent(content, type, blobIds);
 
       transactions.add(
         tfPost.toTransaction({
@@ -165,7 +73,10 @@ const Category = types
           createdAt: now,
           category: self.id,
           editOf: undefined
-        })
+        }),
+        {
+          title: "post"
+        }
       );
     })
   }));

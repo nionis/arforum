@@ -3,6 +3,6 @@ node_modules/
 out/
 out-arweave/
 out-final/
-arweave-keyfile.json
+arweave-keyfile*.json
 notes.txt
 .env

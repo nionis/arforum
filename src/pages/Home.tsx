@@ -1,10 +1,11 @@
 import { observer } from "mobx-react";
 import { Instance } from "mobx-state-tree";
 import { flatMap } from "lodash";
-import PostModel from "src/models/Post";
+import Loading from "src/components/Loading";
+import Item from "src/components/Item";
 import Post from "src/components/Post";
 import Categories from "src/components/Categories";
-import Pagination from "src/components/Pagination";
+import PostModel from "src/models/Post";
 import app from "src/stores/app";
 import forum from "src/stores/forum";
 
@@ -17,33 +18,47 @@ export default observer(() => {
       return <h1>loading</h1>;
     }
 
-    posts = Array.from(forum.categories.get(categoryId).posts.values());
+    posts = Array.from(
+      forum.categories.get(categoryId).postsProcessed.values()
+    );
   } else {
     const categories = Array.from(forum.categories.values());
     posts = flatMap(categories, category =>
-      Array.from(category.posts.values())
+      Array.from(category.postsProcessed.values())
     );
   }
 
-  // const getPosts = () => {};
+  posts = posts.sort((a, b) => {
+    return b.createdAt - a.createdAt;
+  });
+
+  // const showLoading = true;
+  const showLoading =
+    (forum.fCategories.status === "PENDING" ||
+      forum.fPosts.status === "PENDING") &&
+    posts.length === 0;
+  const isEmpty = !showLoading && posts.length === 0;
 
   return (
     <>
       <div className="container">
         <div className="padder">
           <div className="postsContainer">
-            {posts.map(post => {
-              return <Post key={post.id} store={post} showDescription={true} />;
-            })}
-            {/* <Pagination fn={getPosts}>
-              {next => {
-                return posts.map(post => {
-                  return (
+            {showLoading ? (
+              <Loading size="100px" />
+            ) : isEmpty ? (
+              <Item style={{ fontSize: "50px", whiteSpace: "normal" }}>
+                no posts found
+              </Item>
+            ) : (
+              posts.map(post => {
+                return (
+                  <div className="postContainer">
                     <Post key={post.id} store={post} showDescription={true} />
-                  );
-                });
-              }}
-            </Pagination> */}
+                  </div>
+                );
+              })
+            )}
           </div>
           <div className="categoriesContainer">
             <Categories />
@@ -56,6 +71,7 @@ export default observer(() => {
           justify-content: space-around;
           width: 100vw;
           margin-top: ${app.size === "large" ? "5vh" : "2vh"};
+          min-height: 90vh;
         }
 
         .padder {
@@ -63,16 +79,20 @@ export default observer(() => {
           justify-content: space-between;
           flex-direction: ${app.size === "large" ? "row" : "column-reverse"};
           width: ${app.size === "large" ? "90%" : "100%"};
-          height: 100%;
         }
 
         .postsContainer {
           display: flex;
           flex-direction: column;
-          justify-content: space-between;
+          justify-content: ${showLoading || isEmpty ? "center" : "flex-start"};
           align-items: center;
           width: ${app.size === "large" ? "70%" : "100%"};
           height: 100%;
+        }
+
+        .postContainer {
+          width: 100%;
+          margin-bottom: 10px;
         }
 
         .categoriesContainer {

@@ -23,8 +23,8 @@ export const goto = {
   createCategory: () => {
     Router.push(`/#/n/category`);
   },
-  createPost: () => {
-    Router.push(`/#/n/post`);
+  createPost: (categoryId: string) => {
+    Router.push(`/#/n/post/${categoryId}`);
   }
 };
 

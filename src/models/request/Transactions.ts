@@ -5,6 +5,7 @@ import { types, flow } from "mobx-state-tree";
 import TransactionModel from "src/models/request/Transaction";
 import cache from "src/stores/cache";
 import { Reference, ITransactionResult } from "src/utils";
+import { ITransactionOps } from "src/models/request/types";
 
 const Transactions = types
   .model("Transactions", {
@@ -27,19 +28,22 @@ const Transactions = types
   }))
   .actions(self => ({
     add: flow(function* flow(
-      ops: ITransactionResult<any, any>,
-      txIdCb?: (id: string) => any
+      data: ITransactionResult<any, any>,
+      ops: ITransactionOps & {
+        title?: string;
+      } = {}
     ) {
       const id = String(++self.latestId);
 
       self.store.set(
         id,
         TransactionModel.create({
-          id
+          id,
+          title: ops.title
         })
       );
 
-      return self.store.get(id).run(ops, txIdCb);
+      return self.store.get(id).run(data, ops);
     })
   }))
   .actions(self => ({

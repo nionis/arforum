@@ -1,19 +1,23 @@
 import { observer } from "mobx-react";
-import { EditorState } from "draft-js";
+import { RawDraftContentState } from "draft-js";
 import { Editor as EditorDraft } from "react-draft-wysiwyg";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import { light } from "src/utils";
 
 interface IEditorProps {
-  state: EditorState;
-  onChange: (state: EditorState) => any;
+  state: RawDraftContentState;
+  onChange: (state: RawDraftContentState) => any;
+  readOnly?: boolean;
 }
 
-const Editor = observer(({ state, onChange }: IEditorProps) => {
+const Editor = observer(({ state, onChange, readOnly }: IEditorProps) => {
   return (
     <>
       <EditorDraft
-        editorState={state}
+        toolbarHidden={readOnly}
+        readOnly={readOnly}
+        defaultContentState={state}
+        onContentStateChange={onChange}
         toolbar={{
           image: {
             uploadCallback: async file => {
@@ -30,7 +34,6 @@ const Editor = observer(({ state, onChange }: IEditorProps) => {
         editorClassName="editor-editor"
         toolbarClassName="editor-toolbar"
         wrapperClassName="editor-wrapper"
-        onEditorStateChange={onChange}
       />
 
       <style jsx global>{`

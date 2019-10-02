@@ -11,19 +11,37 @@ const Fetches = types
   .model("Fetches", {
     store: types.map(Reference(Fetch))
   })
+  .volatile(self => ({
+    promises: new Map()
+  }))
+  .views(self => ({
+    get pendingSize() {
+      const items = Array.from(self.store.values());
+      const pending = items.filter(item => item.status === "PENDING");
+
+      return pending.length;
+    }
+  }))
   .actions(self => ({
     remove(id: string) {
+      self.promises.delete(id);
       self.store.delete(id);
       cache.delete(id);
     }
   }))
   .actions(self => ({
     add: flow(function* flow(ops: IRunOps) {
-      const id = JSON.stringify({ query: ops.query, variables: ops.variables });
+      const id = JSON.stringify(ops.query);
       const hasStore = self.store.has(id);
 
       if (!ops.forceRefetch && hasStore) {
-        return self.store.get(id).response;
+        const fetch = self.store.get(id);
+
+        if (fetch.status === "PENDING") {
+          return self.promises.get(id);
+        }
+
+        return fetch.response;
       }
 
       if (!hasStore) {
@@ -35,7 +53,7 @@ const Fetches = types
         );
       }
 
-      return self.store
+      const promise = self.store
         .get(id)
         .run(ops)
         .then(res => {
@@ -45,6 +63,10 @@ const Fetches = types
 
           return res;
         });
+
+      self.promises.set(id, promise);
+
+      return promise;
     })
   }))
   .actions(self => ({

@@ -2,7 +2,7 @@ import { observer } from "mobx-react";
 import { types, unprotect } from "mobx-state-tree";
 import Input from "src/components/Input";
 import Button from "src/components/Button";
-import app from "src/stores/app";
+import app, { goto } from "src/stores/app";
 import account from "src/stores/account";
 import forum from "src/stores/forum";
 
@@ -39,6 +39,12 @@ const store = types
         if (!self.ok) return;
 
         forum.createCategory(self.name, self.description);
+
+        self.name = "";
+        self.description = "";
+        self.showErrors = false;
+
+        goto.home();
       }
     };
   })

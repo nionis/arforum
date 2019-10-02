@@ -25,7 +25,6 @@ export const toTransaction: IToTransaction<
       ...requiredTags(),
       "Content-Type": "text/plain",
       modelType: "vote",
-      type: ops.type, // temporary: for faster loading
       item: ops.item
     },
     content: JSON.stringify({

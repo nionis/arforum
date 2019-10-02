@@ -7,7 +7,6 @@ import { IToTransaction, IFromTransaction } from "./types";
 type ModelInstance = Instance<typeof Category>;
 type Keys = "name" | "description" | "createdAt";
 type Tags = {
-  name: string;
   modelType: "category";
 };
 type Content = string;
@@ -21,7 +20,6 @@ export const toTransaction: IToTransaction<
   return {
     id: undefined,
     tags: {
-      name: ops.name, // temporary: for faster loading
       ...fromMs(ops.createdAt),
       ...requiredTags(),
       "Content-Type": "application/json",
@@ -42,7 +40,7 @@ export const fromTransaction: IFromTransaction<
 > = ops => {
   return {
     id: ops.id,
-    name: ops.tags.name,
+    name: ops.content.name,
     description: ops.content.description,
     from: ops.tags.from,
     createdAt: toMs(ops.tags)

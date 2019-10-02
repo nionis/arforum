@@ -6,9 +6,10 @@
   - return data
 */
 import { types } from "mobx-state-tree";
-import arweave, { graphql } from "src/arweave";
+import arweave from "src/arweave";
 import Request from "src/models/request/Request";
 import { IFetchResult, IRunOps } from "src/models/request/types";
+import seq from "promise-sequential";
 
 const Fetch = types
   .compose(
@@ -19,49 +20,43 @@ const Fetch = types
   .actions(self => ({
     run: <R>(ops: IRunOps) => {
       return self.track<IFetchResult<R>[]>(async () => {
-        let data = await graphql(ops.query, ops.variables).then(ops.getData);
+        const ids = await arweave.arql(ops.query);
 
-        // .then(txs => {
-        //   return txs.map(tx => {
-        //     const tags = (tx.tags || []).reduce((result, tag) => {
-        //       result[tag.name] = tag.value;
+        const data: any[] = await seq(
+          ids.map(id => () => {
+            return arweave.transactions.get(id).then(async tx => {
+              const from = await arweave.wallets.ownerToAddress(
+                tx.get("owner")
+              );
 
-        //       return result;
-        //     }, {});
+              const tags = {
+                from
+              };
+              (tx.get("tags") as any).forEach(tag => {
+                const key = tag.get("name", { decode: true, string: true });
+                const value = tag.get("value", { decode: true, string: true });
 
-        //     return {
-        //       ...tx,
-        //       tags
-        //     };
-        //   });
-        // });
-
-        if (ops.fetchContent) {
-          data = await Promise.all(
-            data.map(data => {
-              return arweave.transactions.get(data.id).then(async tx => {
-                ops.type = ops.type || "json";
-
-                const isBinary = ops.type === "binary";
-                const shouldParse = ops.type === "json";
-
-                let content = tx.get("data", {
-                  decode: true,
-                  string: !isBinary
-                } as any) as any;
-
-                if (shouldParse) {
-                  content = JSON.parse(content);
-                }
-
-                return {
-                  ...data,
-                  content
-                };
+                tags[key] = value;
               });
-            })
-          );
-        }
+
+              const contentRaw = tx.get("data", {
+                decode: true,
+                string: true
+              } as any) as any;
+
+              const content =
+                ops.contentType === "application/json"
+                  ? JSON.parse(contentRaw)
+                  : contentRaw;
+
+              return {
+                id,
+                content,
+                tags
+              };
+            });
+          })
+        );
 
         return data;
       });

@@ -15,6 +15,7 @@ import Request from "src/models/request/Request";
 import account from "src/stores/account";
 import arweave from "src/arweave";
 import { wait, ITags, ITransactionResult } from "src/utils";
+import { ITransactionOps } from "src/models/request/types";
 
 const goodStatusCodes = [200, 202, 208];
 
@@ -22,12 +23,14 @@ const Transaction = types
   .compose(
     "Transaction",
     Request,
-    types.model({})
+    types.model({
+      title: ""
+    })
   )
   .actions(self => ({
     run: <T extends ITags>(
-      ops: ITransactionResult<T, any>,
-      txIdCb?: (id: string) => any
+      data: ITransactionResult<T, any>,
+      ops: ITransactionOps = {}
     ) => {
       return self.track(async () => {
         let response;
@@ -41,12 +44,15 @@ const Transaction = types
           transaction = await arweave
             .createTransaction(
               {
-                data: ops.content || " "
+                data: data.content || " ",
+                target: ops.target,
+                quantity: ops.quantity,
+                reward: ops.reward
               },
               account.jwk
             )
             .then(tx => {
-              forEach(ops.tags, (val, key) => {
+              forEach(data.tags, (val, key) => {
                 tx.addTag(key, val);
               });
 
@@ -70,8 +76,8 @@ const Transaction = types
           throw Error("couldn't post transaction");
         }
 
-        if (txIdCb) {
-          txIdCb(transaction.id);
+        if (ops.txIdCb) {
+          ops.txIdCb(transaction.id);
         }
 
         let confirmed = 0;

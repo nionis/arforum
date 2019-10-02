@@ -46,7 +46,8 @@ const App = types
         };
       } else if (type === "n" && id1 === "post") {
         return {
-          page: "CreatePost"
+          page: "CreatePost",
+          categoryId: id2
         };
       }
 
