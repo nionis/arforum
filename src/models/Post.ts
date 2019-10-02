@@ -17,13 +17,17 @@ const Post = types
     HasOwner,
     Votes,
     Editable,
-    types.model({
-      category: types.string,
-      title: "",
-      text: "",
-      comments: types.map(Comment),
-      commentsCountRemote: 0
-    })
+    types
+      .model({
+        category: types.string,
+        title: "",
+        comments: types.map(Comment),
+        commentsCountRemote: 0,
+        type: types.maybe(types.enumeration(["text", "media", "link"]))
+      })
+      .volatile(self => ({
+        content: undefined
+      }))
   )
   .views(self => ({
     get commentsCount() {
@@ -31,14 +35,15 @@ const Post = types
     }
   }))
   .actions(self => ({
-    updateText: flow(function* updateText(text: string) {
+    updateContent: flow(function* updateContent(content: any) {
       const now = getNow();
       const editOf = self.id;
 
       Transaction.create().run(
         tfPost.toTransaction({
           title: self.title,
-          text,
+          type: self.type,
+          content,
           editOf,
           createdAt: now,
           category: self.category
@@ -53,7 +58,7 @@ const Post = types
             transactions(
               tags: [
                 { name: "appId", value: "${appId}" }
-                { name: "type", value: "comment" }
+                { name: "modelType", value: "comment" }
                 { name: "post", value: "${self.id}" }
               ]
             ) {
@@ -87,12 +92,12 @@ const Post = types
       });
     }),
 
-    createComment: flow(function* createComment(text: string) {
+    createComment: flow(function* createComment(content: any) {
       const now = getNow();
 
       return Transaction.create().run(
         tfComment.toTransaction({
-          text,
+          content,
           createdAt: now,
           post: self.id,
           editOf: undefined,

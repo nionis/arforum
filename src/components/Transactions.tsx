@@ -5,7 +5,7 @@ import transactions from "src/stores/transactions";
 
 const Transactions = observer(() => {
   const { colors, size } = app;
-  const txs = Array.from(transactions.store.values());
+  const txs = Array.from(transactions.store.values()).reverse();
 
   return (
     <>
@@ -25,7 +25,7 @@ const Transactions = observer(() => {
               <div className="status">{tx.status}</div>{" "}
             </div>
           ))}
-          {txs.length === 0 ? (
+          {transactions.pendingSize === 0 ? (
             <Item textColor={colors.mutedText}>no transactions found</Item>
           ) : null}
         </div>

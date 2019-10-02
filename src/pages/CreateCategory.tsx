@@ -2,7 +2,7 @@ import { observer } from "mobx-react";
 import { types, unprotect } from "mobx-state-tree";
 import Input from "src/components/Input";
 import Button from "src/components/Button";
-import app, { goto } from "src/stores/app";
+import app from "src/stores/app";
 import account from "src/stores/account";
 import forum from "src/stores/forum";
 

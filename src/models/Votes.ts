@@ -58,7 +58,7 @@ const Votes = types
             transactions(
               tags: [
                 { name: "appId", value: "${appId}" }
-                { name: "type", value: "vote" }
+                { name: "modelType", value: "vote" }
                 { name: "item", value: "${self.id}" }
               ]
             ) {

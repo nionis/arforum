@@ -36,7 +36,7 @@ const User = types
                 tags: [
                   { name: "App-Name", value: "arweave-id" }
                   { name: "from", value: "${self.address}" }
-                  { name: "Type", value: "name" }
+                  { name: "modelType", value: "name" }
                 ]
               ) {
                 id

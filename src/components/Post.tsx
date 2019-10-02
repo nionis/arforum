@@ -27,7 +27,7 @@ interface IPost {
 
 const Post = observer(({ store, showDescription }: IPost) => {
   const { colors } = app;
-  const description = store.text.substring(0, 10);
+  const description = "";
   const commentsSize = `${store.commentsCount} ${
     store.commentsCount === 1 ? "comment" : "comments"
   }`;
@@ -49,7 +49,7 @@ const Post = observer(({ store, showDescription }: IPost) => {
             {showDescription ? (
               <span>{description}</span>
             ) : (
-              <ReactMarkdown source={store.text} />
+              <ReactMarkdown source={""} />
             )}
           </Item>
           <span className="comment">

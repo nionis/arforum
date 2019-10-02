@@ -33,7 +33,7 @@ const Forum = types
             transactions(
               tags: [
                 ${queryApp}
-                { name: "type", value: "category" }
+                { name: "modelType", value: "category" }
               ]
             ) {
               id
@@ -41,7 +41,7 @@ const Forum = types
 
               posts: linkedFromTransactions(byForeignTag: "category", tags: [
                 ${queryApp}
-                { name: "type", value: "post" }
+                { name: "modelType", value: "post" }
               ]) {
                 id
                 from: tagValue(tagName: "from")
@@ -50,7 +50,7 @@ const Forum = types
 
                 commentsCount: countLinkedFromTransactions(byForeignTag: "post", tags: [
                   ${queryApp}
-                  { name: "type", value: "comment" }
+                  { name: "modelType", value: "comment" }
                 ])
               }
             }
@@ -110,6 +110,7 @@ const Forum = types
               title: post.title,
               category: post.category,
               commentsCountRemote: post.commentsCount,
+              type: post.type,
               from: User.create({
                 id: post.from
               }) as any,

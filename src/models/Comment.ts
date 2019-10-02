@@ -13,20 +13,23 @@ const Comment = types
     HasOwner,
     Votes,
     Editable,
-    types.model({
-      post: types.string,
-      text: "",
-      replyOf: types.maybe(types.string)
-    })
+    types
+      .model({
+        post: types.string,
+        replyOf: types.maybe(types.string)
+      })
+      .volatile(self => ({
+        content: undefined
+      }))
   )
   .actions(self => ({
-    updateText: flow(function* updateText(text: string) {
+    updateContent: flow(function* updateContent(content: any) {
       const now = getNow();
       const editOf = self.id;
 
       Transaction.create().run(
         tfComment.toTransaction({
-          text,
+          content,
           createdAt: now,
           post: self.id,
           editOf: editOf,
@@ -35,12 +38,12 @@ const Comment = types
       );
     }),
 
-    reply: flow(function* reply(text: string) {
+    reply: flow(function* reply(content: any) {
       const now = getNow();
 
       Transaction.create().run(
         tfComment.toTransaction({
-          text,
+          content,
           createdAt: now,
           post: self.post,
           editOf: undefined,

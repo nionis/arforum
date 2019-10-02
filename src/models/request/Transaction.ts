@@ -25,7 +25,10 @@ const Transaction = types
     types.model({})
   )
   .actions(self => ({
-    run: <T extends ITags>(ops: ITransactionResult<T, any>) => {
+    run: <T extends ITags>(
+      ops: ITransactionResult<T, any>,
+      txIdCb?: (id: string) => any
+    ) => {
       return self.track(async () => {
         let response;
         let transaction: TransactionType | undefined;
@@ -67,9 +70,13 @@ const Transaction = types
           throw Error("couldn't post transaction");
         }
 
+        if (txIdCb) {
+          txIdCb(transaction.id);
+        }
+
         let confirmed = 0;
         let runsWithError = 0;
-        while (confirmed === 0 && runsWithError < 5) {
+        while (confirmed === 0 && runsWithError < 10) {
           await wait(5e3);
           await arweave.transactions
             .getStatus(transaction.id)

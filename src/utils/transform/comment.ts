@@ -5,14 +5,14 @@ import { requiredTags } from "./utils";
 import { IToTransaction, IFromTransaction } from "./types";
 
 type ModelInstance = Instance<typeof Comment>;
-type Keys = "text" | "createdAt" | "post" | "editOf" | "replyOf";
+type Keys = "content" | "createdAt" | "post" | "editOf" | "replyOf";
 type Tags = {
-  type: "comment";
+  modelType: "comment";
   post: string;
   editOf: string;
   replyOf: string;
 };
-type Content = "text";
+type Content = string;
 
 export const toTransaction: IToTransaction<
   ModelInstance,
@@ -25,13 +25,15 @@ export const toTransaction: IToTransaction<
     tags: {
       ...fromMs(ops.createdAt),
       ...requiredTags(),
-      "Content-Type": "text/plain",
-      type: "comment",
+      "Content-Type": "application/json",
+      modelType: "comment",
       post: ops.post,
       editOf: ops.editOf,
       replyOf: ops.replyOf
     },
-    content: ops.text
+    content: JSON.stringify({
+      content: ops.content
+    })
   };
 };
 
@@ -39,11 +41,11 @@ export const fromTransaction: IFromTransaction<
   ModelInstance,
   Keys,
   Tags,
-  Content
+  any
 > = ops => {
   return {
     id: ops.id,
-    text: ops.content,
+    content: ops.content.content,
     from: ops.tags.from,
     post: ops.tags.post,
     createdAt: toMs(ops.tags),

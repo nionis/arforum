@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const dotenvExpand = require("dotenv-expand");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const WithBundleAnalyzer = require("@next/bundle-analyzer");
+const withCSS = require("@zeit/next-css");
 
 const withBundleAnalyzer = WithBundleAnalyzer({
   enabled: process.env.ANALYZE === "true"
@@ -15,11 +16,32 @@ if (!myEnv.APP_ID || !myEnv.ENVIRONMENT || !myEnv.VERSION) {
   console.log(".env", myEnv);
 }
 
-module.exports = withBundleAnalyzer({
-  webpack: config => {
-    config.plugins.push(new EnvironmentPlugin(myEnv));
-    config.resolve.plugins.push(new TsconfigPathsPlugin());
+function removeMinimizeOptionFromCssLoaders(config) {
+  console.warn(
+    "Removing `minimize` option from `css-loader` entries in Webpack config"
+  );
 
-    return config;
-  }
-});
+  config.module.rules.forEach(rule => {
+    if (Array.isArray(rule.use)) {
+      rule.use.forEach(u => {
+        if (u.loader === "css-loader" && u.options) {
+          delete u.options.minimize;
+        }
+      });
+    }
+  });
+
+  return config;
+}
+
+module.exports = withCSS(
+  withBundleAnalyzer({
+    webpack: config => {
+      config.plugins.push(new EnvironmentPlugin(myEnv));
+      config.resolve.plugins.push(new TsconfigPathsPlugin());
+
+      config = removeMinimizeOptionFromCssLoaders(config);
+      return config;
+    }
+  })
+);

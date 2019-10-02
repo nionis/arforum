@@ -5,14 +5,14 @@ import { requiredTags } from "./utils";
 import { IToTransaction, IFromTransaction } from "./types";
 
 type ModelInstance = Instance<typeof Post>;
-type Keys = "title" | "text" | "createdAt" | "category" | "editOf";
+type Keys = "title" | "content" | "createdAt" | "category" | "editOf" | "type";
 type Tags = {
   title: string;
-  type: "post";
+  modelType: "post";
   category: string;
   editOf: string;
 };
-type Content = "text";
+type Content = string;
 
 export const toTransaction: IToTransaction<
   ModelInstance,
@@ -23,16 +23,19 @@ export const toTransaction: IToTransaction<
   return {
     id: undefined,
     tags: {
-      title: ops.title, // TODO: could be in content
-      // TODO: could add description
+      title: ops.title, // temporary: for faster loading
       ...fromMs(ops.createdAt),
       ...requiredTags(),
       "Content-Type": "text/plain",
-      type: "post",
+      modelType: "post",
       category: ops.category,
       editOf: ops.editOf
     },
-    content: ops.text
+    content: JSON.stringify({
+      title: ops.title,
+      content: ops.content,
+      type: ops.type
+    })
   };
 };
 
@@ -40,15 +43,16 @@ export const fromTransaction: IFromTransaction<
   ModelInstance,
   Keys,
   Tags,
-  Content
+  any
 > = ops => {
   return {
     id: ops.id,
     title: ops.tags.title,
-    text: ops.content,
+    content: ops.content.content,
     from: ops.tags.from,
     category: ops.tags.category,
     editOf: ops.tags.editOf,
+    type: ops.content.type,
     createdAt: toMs(ops.tags)
   };
 };

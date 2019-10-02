@@ -7,10 +7,10 @@ export const queryApp = `
 `;
 
 export const timestamps = `
-  year: tagValue(tagName: "year")
-  month: tagValue(tagName: "month")
-  date: tagValue(tagName: "date")
-  hours: tagValue(tagName: "hours")
-  minutes: tagValue(tagName: "minutes")
-  seconds: tagValue(tagName: "seconds")
+  YYYY: tagValue(tagName: "YYYY")
+  MM: tagValue(tagName: "MM")
+  d: tagValue(tagName: "d")
+  H: tagValue(tagName: "H")
+  m: tagValue(tagName: "m")
+  s: tagValue(tagName: "s")
 `;

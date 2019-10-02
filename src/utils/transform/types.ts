@@ -34,23 +34,23 @@ export type IToTransaction<
   M extends ModelInstanceType<any, any>,
   K extends keyof M,
   T,
-  C extends keyof M
+  C = string
 > = (
   ops: IToTransactionOps<M, K>
-) => ITransactionResult<T & IRequiredTags & IParsedTimestamp, M[C]>;
+) => ITransactionResult<T & IRequiredTags & IParsedTimestamp, C>;
 
 export type IFromTransactionOps<
   M extends ModelInstanceType<any, any>,
   K extends keyof M,
   T,
-  C extends keyof M
+  C = string
 > = ReturnType<IToTransaction<M, K, T & { id: string; from: string }, C>>;
 
 export type IFromTransaction<
   M extends ModelInstanceType<any, any>,
   K extends keyof M,
   T,
-  C extends keyof M
+  C = string
 > = (
   ops: IFromTransactionOps<M, K, T, C>
 ) => IToTransactionOps<M, K> & {

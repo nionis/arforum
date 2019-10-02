@@ -71,6 +71,7 @@ const Input = observer(
             border: 1px solid ${colors.border};
             border-radius: 3px;
             background: ${colors.inputBackground};
+            color: ${colors.normalText};
           }
 
           textarea {
@@ -81,6 +82,7 @@ const Input = observer(
             border: 1px solid ${colors.border};
             border-radius: 3px;
             background: ${colors.inputBackground};
+            color: ${colors.normalText};
             min-height: 80px;
             resize: vertical;
           }

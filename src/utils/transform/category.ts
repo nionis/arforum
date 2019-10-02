@@ -8,9 +8,9 @@ type ModelInstance = Instance<typeof Category>;
 type Keys = "name" | "description" | "createdAt";
 type Tags = {
   name: string;
-  type: "category";
+  modelType: "category";
 };
-type Content = "description";
+type Content = string;
 
 export const toTransaction: IToTransaction<
   ModelInstance,
@@ -21,11 +21,11 @@ export const toTransaction: IToTransaction<
   return {
     id: undefined,
     tags: {
-      name: ops.name, // not needed
+      name: ops.name, // temporary: for faster loading
       ...fromMs(ops.createdAt),
       ...requiredTags(),
       "Content-Type": "application/json",
-      type: "category"
+      modelType: "category"
     },
     content: JSON.stringify({
       name: ops.name,
@@ -38,14 +38,12 @@ export const fromTransaction: IFromTransaction<
   ModelInstance,
   Keys,
   Tags,
-  Content
+  any
 > = ops => {
-  const content = (ops.content || {}) as any;
-
   return {
     id: ops.id,
     name: ops.tags.name,
-    description: content.description,
+    description: ops.content.description,
     from: ops.tags.from,
     createdAt: toMs(ops.tags)
   };

@@ -4,7 +4,7 @@ export const Pagination = (
   start: number,
   fn: ({ month: number }) => Promise<any>
 ) => {
-  const { month } = fromMs(start);
+  const { MM: month } = fromMs(start);
 
   const pDate = new Date(start);
   pDate.setUTCMonth(pDate.getUTCMonth() - 1);

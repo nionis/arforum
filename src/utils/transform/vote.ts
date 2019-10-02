@@ -7,10 +7,10 @@ import { IToTransaction, IFromTransaction } from "./types";
 type ModelInstance = Instance<typeof Vote>;
 type Keys = "type" | "item" | "createdAt";
 type Tags = {
-  type: "vote";
+  modelType: "vote";
   item: string;
 };
-type Content = "type";
+type Content = string;
 
 export const toTransaction: IToTransaction<
   ModelInstance,
@@ -24,11 +24,13 @@ export const toTransaction: IToTransaction<
       ...fromMs(ops.createdAt),
       ...requiredTags(),
       "Content-Type": "text/plain",
-      type: "vote",
-      // TODO: could add type here
+      modelType: "vote",
+      type: ops.type, // temporary: for faster loading
       item: ops.item
     },
-    content: ops.type
+    content: JSON.stringify({
+      type: ops.type
+    })
   };
 };
 
@@ -36,11 +38,11 @@ export const fromTransaction: IFromTransaction<
   ModelInstance,
   Keys,
   Tags,
-  Content
+  any
 > = ops => {
   return {
     id: ops.id,
-    type: ops.content,
+    type: ops.content.type,
     from: ops.tags.from,
     item: ops.tags.item,
     createdAt: toMs(ops.tags)

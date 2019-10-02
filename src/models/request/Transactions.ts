@@ -11,6 +11,14 @@ const Transactions = types
     latestId: 0,
     store: types.map(Reference(TransactionModel))
   })
+  .views(self => ({
+    get pendingSize() {
+      const items = Array.from(self.store.values());
+      const pending = items.filter(item => item.status === "PENDING");
+
+      return pending.length;
+    }
+  }))
   .actions(self => ({
     remove(id: string) {
       self.store.delete(id);
@@ -18,7 +26,10 @@ const Transactions = types
     }
   }))
   .actions(self => ({
-    add: flow(function* flow(ops: ITransactionResult<any, any>) {
+    add: flow(function* flow(
+      ops: ITransactionResult<any, any>,
+      txIdCb?: (id: string) => any
+    ) {
       const id = String(++self.latestId);
 
       self.store.set(
@@ -28,16 +39,7 @@ const Transactions = types
         })
       );
 
-      return self.store
-        .get(id)
-        .run(ops)
-        .then(res => {
-          setTimeout(() => {
-            self.remove(id);
-          }, 10e3);
-
-          return res;
-        });
+      return self.store.get(id).run(ops, txIdCb);
     })
   }))
   .actions(self => ({

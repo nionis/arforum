@@ -37,7 +37,7 @@ const Comment = observer(({ store }: IComment) => {
             </Item>
           </Border>
           <Item textColor={colors.mutedText} style={itemStyle}>
-            <ReactMarkdown source={store.text} />
+            <ReactMarkdown source={store.content || ""} />
           </Item>
         </div>
       </div>

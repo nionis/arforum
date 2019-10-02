@@ -1,34 +1,34 @@
 export interface IParsedTimestamp {
-  year: number;
-  month: number;
-  date: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
+  YYYY: number;
+  MM: number;
+  d: number;
+  H: number;
+  m: number;
+  s: number;
 }
 
 export const fromMs = (ms: number): IParsedTimestamp => {
   const date = new Date(ms);
 
   return {
-    year: date.getUTCFullYear(),
-    month: date.getUTCMonth(),
-    date: date.getUTCDate(),
-    hours: date.getUTCHours(),
-    minutes: date.getUTCMinutes(),
-    seconds: date.getUTCSeconds()
+    YYYY: date.getUTCFullYear(),
+    MM: date.getUTCMonth(),
+    d: date.getUTCDate(),
+    H: date.getUTCHours(),
+    m: date.getUTCMinutes(),
+    s: date.getUTCSeconds()
   };
 };
 
 export const toMs = (data: IParsedTimestamp): number => {
   const date = new Date();
 
-  date.setUTCFullYear(data.year);
-  date.setUTCMonth(data.month);
-  date.setUTCDate(data.date);
-  date.setUTCHours(data.hours);
-  date.setUTCMinutes(data.minutes);
-  date.setUTCSeconds(data.seconds);
+  date.setUTCFullYear(data.YYYY);
+  date.setUTCMonth(data.MM);
+  date.setUTCDate(data.d);
+  date.setUTCHours(data.H);
+  date.setUTCMinutes(data.m);
+  date.setUTCSeconds(data.s);
 
   return date.valueOf();
 };
