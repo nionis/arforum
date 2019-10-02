@@ -1,25 +1,29 @@
 import { CSSProperties } from "react";
 import Item from "src/components/Item";
 import app from "src/stores/app";
+import Loading from "./Loading";
 
 interface IButton {
   children: any;
   onClick?: () => any;
   disabled?: boolean;
   style?: CSSProperties;
+  loading?: boolean;
 }
 
-const Button = ({ children, onClick, disabled, style }: IButton) => {
+const Button = ({ children, disabled, onClick, style, loading }: IButton) => {
   const { colors } = app;
 
   return (
     <>
-      <Item
-        textColor="white"
-        accentColor="white"
-        onClick={disabled ? undefined : onClick}
-      >
-        <div style={style}>{children}</div>
+      <Item textColor="white" accentColor="white" onClick={onClick}>
+        {loading ? (
+          <div style={style}>
+            <Loading alwaysWhite={true} />
+          </div>
+        ) : (
+          <div style={style}>{children}</div>
+        )}
       </Item>
 
       <style jsx>{`
