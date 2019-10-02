@@ -8,6 +8,7 @@ import { ArrowDownward } from "@material-ui/icons";
 import Tabs from "../components/Tabs";
 import Border from "../components/Border";
 import { useDropzone } from "react-dropzone";
+import Loading from "../components/Loading";
 
 const CreateCategory = observer(() => {
   const { colors } = app;
